@@ -1,7 +1,7 @@
 "use strict";
 const KEY = "fsu-lifting-budget-v2";
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const CATS = ["Events & Game Day","Moving & Labor","Food & Hospitality","Yard & Home","Tutoring & Coaching","Campus & Research","Delivery & Gigs","Team Fundraisers"];
+const CATS = ["Race & Meet Crews","Game Day & Concessions","Team Events","Moving & Labor","Yard & Home","Coaching & Tutoring","On-demand Gigs"];
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -11,46 +11,84 @@ const usd = (n, d = 0) => (isFinite(n) ? n : 0).toLocaleString("en-US", { style:
 /* ---------------- default data ---------------- */
 // [title, cat, rate, hours, tips, area, when[], months|null, how-to-find, search query, description]
 const SEED_JOBS = [
- ["Stadium / arena event staff","Events & Game Day",15,6,0,"campus",["weekend","evening"],null,"Game-day and Civic Center event jobs are posted on Handshake and by event-staffing companies.","event staff usher","Ushering, ticket-taking, guest services and crowd management at games, concerts and shows."],
- ["Event setup & teardown crew","Events & Game Day",17,5,0,"city",["weekday","evening","weekend"],null,"Rental, AV and staging companies hire day-of labor — lifters are great at this.","event setup crew","Set up and break down tables, stages and tents. Heavy lifting, short notice, good pay."],
- ["Festival & market vendor help","Events & Game Day",15,6,20,"near",["weekend"],[3,4,10,11],"Ask vendors at Market Days / Springtime Tallahassee–type events; check Facebook groups.","festival vendor booth","Run a booth, load/unload vendors, handle crowds at spring & fall festivals."],
- ["Catering server / banquet","Food & Hospitality",15,5,40,"city",["evening","weekend"],null,"Local caterers and event venues keep a flexible on-call student list.","catering server banquet","Serve at weddings, corporate events and fundraisers. Hourly plus tips."],
- ["Bartender / barback (21+)","Food & Hospitality",12,6,60,"near",["evening","weekend"],null,"Downtown and Midtown bars; barbacks need no experience.","barback bartender","Tipped base wage plus tips — one busy night can beat 2 regular shifts."],
- ["Restaurant host / busser","Food & Hospitality",12,5,35,"near",["evening","weekend"],null,"Walk in with a résumé between 2–4 pm.","restaurant host busser","Easy entry job around campus; tips vary."],
- ["Moving help (load & haul)","Moving & Labor",22,4,10,"city",["weekday","weekend"],null,"Local moving companies and “two guys and a truck” outfits; Craigslist gigs.","moving helper","Peak around move-out (Apr–May, Jul–Aug, Dec). Lifting experience = instant hire."],
- ["Apartment move-out cleaning","Moving & Labor",18,4,0,"near",["weekday","weekend"],[4,5,7,8,12],"Property managers and student-housing complexes near campus.","apartment turnover cleaning","Turnover cleaning between tenants; heavy demand at semester ends."],
- ["Junk removal / hauling","Moving & Labor",20,4,0,"city",["weekday","weekend"],null,"Junk-removal franchises and Craigslist/Facebook “haul away” requests.","junk removal helper","Lift, load, dump. Per-hour or per-job."],
- ["Yard work & landscaping","Yard & Home",18,3,0,"city",["weekday","weekend"],[3,4,5,6,7,8,9,10],"Landscaping crews; neighborhood Facebook / Nextdoor posts.","lawn landscaping helper","Mowing, edging, mulch. Summer heat — hydrate."],
- ["Leaf & gutter cleanup","Yard & Home",18,3,0,"city",["weekend"],[10,11,12,1,2],"Neighborhood groups; flyers in nearby residential areas.","gutter leaf cleanup","Fall/winter cleanup for homeowners."],
- ["Holiday-lights installation","Yard & Home",20,4,15,"city",["weekday","weekend"],[11,12],"Seasonal decorating companies hire in Oct–Nov.","holiday lights installer","Hang lights and decorations; ladders and teamwork."],
- ["Seasonal retail & gift wrap","Delivery & Gigs",15,5,0,"near",["evening","weekend"],[11,12],"Apply in October at malls (Governor's Square) and big-box stores.","seasonal retail associate","Holiday retail shifts; some stores guarantee weekend hours."],
- ["Mobile car wash / detailing","Yard & Home",20,3,15,"city",["weekend"],null,"Advertise in apartment complexes and Facebook groups.","car detailing","Build your own mini-business; supplies cost is small."],
- ["Tutoring (math, SAT/ACT, chem)","Tutoring & Coaching",25,2,0,"near",["weekday","evening"],null,"FSU tutoring centers, private-tutor boards, high schools & families.","tutor math","Highest $/hour of the “easy” options; short shifts."],
- ["Youth strength / sports coach","Tutoring & Coaching",20,2,0,"near",["evening","weekend"],null,"Local gyms, youth leagues, school athletic departments.","youth strength coach","Teach technique to kids and teens — great fit for lifters."],
- ["Personal training (cert. required)","Tutoring & Coaching",35,1,0,"campus",["weekday","evening"],null,"Campus Rec / local gyms; need CPT certification.","personal trainer","Few shifts, high rate — if someone on the team is certified."],
- ["Babysitting / nanny","Tutoring & Coaching",16,4,0,"near",["evening","weekend"],null,"Faculty families, FSU parent groups, Care/Sittercity-style sites.","babysitter","Flexible evenings and weekends."],
- ["Pet sitting / dog walking","Delivery & Gigs",18,2,0,"near",["weekday","weekend"],null,"Rover/Wag-style apps and apartment bulletin boards.","pet sitter dog walker","Easy to fit between practice and class."],
- ["Campus Rec official / lifeguard","Campus & Research",15,4,0,"campus",["weekday","evening"],[1,2,3,4,9,10,11],"FSU Campus Recreation hiring page / Handshake.","campus recreation official","Intramural referees and lifeguards; evenings during the semester."],
- ["Paid research studies","Campus & Research",15,1.5,0,"campus",["weekday"],[1,2,3,4,9,10,11],"FSU department participant pools, flyers in Psychology / Health buildings.","research study participant","Quick sessions, sometimes pay is a flat $10–25."],
- ["Summer orientation staff","Campus & Research",15,6,0,"campus",["weekday"],[5,6,7],"FSU Orientation / Student Affairs — apply in the fall or early spring.","orientation leader","Seasonal but steady hours."],
- ["Food / grocery delivery","Delivery & Gigs",16,3,0,"city",["weekday","evening","weekend"],null,"DoorDash, Uber Eats, Instacart — sign up once, work whenever.","delivery driver","Most flexible; gas and wear-and-tear reduce the real take-home."],
- ["Warehouse / package sorting","Delivery & Gigs",17,6,0,"city",["weekday","evening"],[11,12,1],"Shipping carriers hire seasonal help in the fall.","package handler warehouse","Peak season Nov–Jan. Good for lifters."],
- ["Restaurant “spirit night”","Team Fundraisers",0,3,0,"near",["evening"],null,"Ask a local restaurant to donate 15–20% of sales for one night; promote it on social.","",
-   "GROUP: a busy night can bring in $300–500 for the team. Split across the people working/promoting."],
- ["Community Olympic-lifting clinic","Team Fundraisers",0,2,0,"campus",["weekend"],null,"Host a $20-per-person technique clinic at your gym; invite alumni, local gyms, high-school teams.","",
-   "GROUP: 30 attendees × $20 ≈ $600. On-brand and low cost."],
- ["Team car wash","Team Fundraisers",0,4,0,"near",["weekend"],[3,4,5,6,7,8,9,10],"Ask a parking-lot owner (bank, auto parts store) for permission.","",
-   "GROUP: roughly $400–600 for a good Saturday."],
- ["Stadium concession stand (org payout)","Team Fundraisers",0,6,0,"campus",["weekend"],[1,2,3,4,9,10,11,12],"Venues and concession companies often pay student orgs a share to staff stands. Ask early — spots fill up.","",
-   "GROUP: payouts vary widely; confirm the rate before committing."],
+ // ---- dated group events (whole team or 5-person crews) ----
+ ["FHSAA cross-country state finals: course marshals","Race & Meet Crews",0,6,0,"city",["weekend","weekday"],[11],"Apalachee Regional Park hosts the state finals. Email the Visit Tallahassee Sports office / timing company and offer a trained 16-person marshal and officials crew for a donation to the club.","cross country meet officials",
+   "Whole team. Course marshals, lap counters, finish-chute and results runners. Pay is a negotiated club donation; the figure here is an estimate."],
+ ["NCAA South Regional cross country: course crew","Race & Meet Crews",0,6,0,"city",["weekend"],[11],"FSU hosts the regional at Apalachee Regional Park. Ask FSU Cross Country / Seminole Sports Properties about paid event crews.","ncaa cross country event staff",
+   "Whole team. Course setup, marshals, tent and fence crew. Confirm the exact date and rate with FSU Athletics."],
+ ["Turkey Trot: course marshals & water stops","Race & Meet Crews",0,5,0,"city",["weekday"],[11],"Email the race director (tallyturkeytrot.com) and offer a marshal and aid-station crew for a donation.","turkey trot volunteers",
+   "Whole team, Thursday Nov 26, 8:00am–12:00pm race. Expo setup also runs Sun Nov 22 at Goodwood."],
+ ["Tallahassee Marathon: aid stations & course crew","Race & Meet Crews",0,7,0,"city",["weekend"],[2],"Contact the Tallahassee Marathon race director (tallahasseemarathon.com). Races start 7:30am; aid stations are staffed by groups.","tallahassee marathon volunteers",
+   "Whole team, Sunday Feb 7, 2027. Many races pay group donations to clubs that staff a whole aid station."],
+ ["Tallahassee Marathon: expo & packet pickup crew","Race & Meet Crews",0,5,0,"near",["weekend"],[2],"Same race director; the packet pickup and expo runs the day before the race.","tallahassee marathon packet pickup",
+   "5-person crew, Saturday Feb 6, 2027: bib handout, shirt tables, setup and teardown."],
+ ["Weekend 5K / 10K race-day crew","Race & Meet Crews",0,4,0,"city",["weekend"],null,"Check local race calendars (Tallahassee Runners Club, RunSignUp) and offer a 5-person setup/marshal crew.","5k race volunteers",
+   "5-person crew. Course marking, finish line, water tables. Typical group donation is $150–300 per race."],
+ ["FSU home football: concession stand (NC State)","Game Day & Concessions",0,6,0,"campus",["weekend"],[11],"Local nonprofits run FSU concession stands and recruit crews through Volunteer Leon and Idealist. Email the lead organization listed there, 17+ and black pants/shoes.","fsu football concession stand",
+   "Crew of 10, Sat Nov 21 vs NC State at Doak Campbell. The organization pays its crews a share; get the rate in writing."],
+ ["FSU home football: concession stand (5-person crew)","Game Day & Concessions",0,6,0,"campus",["weekend"],[11],"Volunteer Leon lists FSU game concession stands needing crews (850-766-3106). Confirm the Nov 27 Florida game is a Tallahassee home game on seminoles.com.","fsu games concession stand volunteer",
+   "Crew of 5, late November home game. Smaller crews are easier to get onto a stand."],
+ ["Pop-up concession stand at a Saturday event","Game Day & Concessions",0,6,0,"city",["weekend"],[11,12,1,2,3],"Rent a tent and sell drinks and snacks at a tailgate, craft market, or youth tournament. Get the venue's vendor permission and a Florida temporary food permit first.","pop up food vendor tallahassee",
+   "Crew of 5. Own stand: you keep the profit after supplies and fees. Estimate only."],
+ ["Semester move-out hauling crew","Moving & Labor",0,5,0,"near",["weekend","weekday"],[12],"Post in FSU housing Facebook groups and offer a 5-person load-and-haul crew for finals week and the days after.","student move out help",
+   "Crew of 5, mid-December. About $110 each for a half-day; lifters can carry a full apartment in one trip."],
+ ["Holiday-lights installation crew","Yard & Home",0,5,0,"city",["weekday","weekend"],[11,12],"Decorating companies hire day crews in Oct–Nov; offer a 5-person crew.","holiday lights installer",
+   "Crew of 5. Hanging lights and decorations; ladders and teamwork."],
+ ["Restaurant “spirit night”","Team Events",0,3,0,"near",["evening"],null,"Ask a local restaurant to donate 15–20% of sales for one night; promote it on social.","",
+   "Whole team. A busy night brings in $300–500."],
+ ["Community Olympic-lifting clinic","Team Events",0,2,0,"campus",["weekend"],null,"Host a $20-per-person technique clinic at your gym; invite alumni, local gyms, high-school teams.","",
+   "Whole team. 30 attendees × $20 ≈ $600."],
+ ["Team car wash","Team Events",0,4,0,"near",["weekend"],[1,2,3,10,11,12],"Ask a parking-lot owner (bank, auto parts store) for permission.","",
+   "Whole team. Roughly $400–600 for a good Saturday."],
+ // ---- one-off freelance work, done solo or in pairs ----
+ ["Referee / official: youth sports (per game)","On-demand Gigs",30,3,0,"city",["weekend","evening"],null,"City of Tallahassee Parks & Recreation and youth leagues hire per-game officials; take the short certification.","youth sports referee tallahassee",
+   "Paid per game, no schedule commitment. Rates change by sport; confirm with the league."],
+ ["Event setup & teardown (Instawork shift)","On-demand Gigs",17,5,0,"city",["weekday","evening","weekend"],null,"Sign up on Instawork for Tallahassee. Pick single shifts at venues and events.","event setup crew",
+   "Single-shift gigs, no commitment. Heavy lifting, short notice."],
+ ["Catering / banquet shift (one event)","On-demand Gigs",15,5,40,"city",["evening","weekend"],null,"Local caterers keep an on-call list of students for single events.","catering server banquet",
+   "One event at a time. Hourly plus tips."],
+ ["Moving help (load & haul)","Moving & Labor",22,4,10,"city",["weekday","weekend"],null,"Local moving companies; Craigslist and Facebook gigs.","moving helper",
+   "Paid per job. Peak around Dec and Apr–May."],
+ ["Junk removal / hauling job","Moving & Labor",20,4,0,"city",["weekday","weekend"],null,"Junk-removal franchises and Craigslist/Facebook haul-away requests.","junk removal helper",
+   "Lift, load, dump. Per job."],
+ ["Leaf & gutter cleanup job","Yard & Home",18,3,0,"city",["weekend"],[10,11,12,1,2],"Neighborhood groups and Nextdoor; flyers in nearby neighborhoods.","gutter leaf cleanup",
+   "Per-yard jobs for homeowners."],
+ ["Yard work & landscaping job","Yard & Home",18,3,0,"city",["weekday","weekend"],[3],"Neighborhood Facebook and Nextdoor posts.","lawn landscaping helper",
+   "Mowing, edging, mulch. Spring season starts in March."],
+ ["Mobile car wash / detailing","Yard & Home",20,3,15,"city",["weekend"],null,"Advertise in apartment complexes and Facebook groups.","car detailing",
+   "Your own mini-business. Supplies cost little."],
+ ["Private tutoring session","Coaching & Tutoring",25,2,0,"near",["weekday","evening"],null,"Private-tutor boards, high schools and families; no employer.","tutor math",
+   "Pay per session. Highest $/hour of the easy options."],
+ ["Weightlifting coaching session (private clients)","Coaching & Tutoring",30,1.5,0,"near",["weekday","evening"],null,"Offer technique sessions to local gyms, youth athletes and parents; no employer.","weightlifting coach",
+   "Pay per session. Great fit for lifters."],
+ ["Pet sitting / dog walking","On-demand Gigs",18,2,0,"near",["weekday","weekend"],null,"Rover or Wag-style apps and apartment bulletin boards.","pet sitter dog walker",
+   "Single bookings."],
 ];
-// group-job payouts (title -> [payout, crew])
-const GROUP = { "Restaurant “spirit night”":[400,6], "Community Olympic-lifting clinic":[600,6], "Team car wash":[500,6], "Stadium concession stand (org payout)":[900,10] };
+// group-job payouts (title -> [payout, crew]); crew sizes are the people needed for one booking
+const GROUP = {
+ "FHSAA cross-country state finals: course marshals":[1000,16], "NCAA South Regional cross country: course crew":[900,16],
+ "Turkey Trot: course marshals & water stops":[700,16], "Tallahassee Marathon: aid stations & course crew":[1000,16],
+ "Tallahassee Marathon: expo & packet pickup crew":[300,5], "Weekend 5K / 10K race-day crew":[250,5],
+ "FSU home football: concession stand (NC State)":[900,10], "FSU home football: concession stand (5-person crew)":[500,5],
+ "Pop-up concession stand at a Saturday event":[400,5], "Semester move-out hauling crew":[550,5], "Holiday-lights installation crew":[600,5],
+ "Restaurant “spirit night”":[400,16], "Community Olympic-lifting clinic":[600,16], "Team car wash":[500,16] };
+// event date, label and source link (title -> [ISO date, label, url])
+const EVENT = {
+ "FHSAA cross-country state finals: course marshals":["2026-11-20","Fri Nov 20, 2026","https://fhsaa.com/sports/cross-country"],
+ "NCAA South Regional cross country: course crew":["2026-11-13","Mid-Nov 2026 (confirm date)","https://seminoles.com/sports/cross-country/schedule"],
+ "Turkey Trot: course marshals & water stops":["2026-11-26","Thu Nov 26, 2026","https://www.tallyturkeytrot.com"],
+ "Tallahassee Marathon: aid stations & course crew":["2027-02-07","Sun Feb 7, 2027","https://www.tallahasseemarathon.com"],
+ "Tallahassee Marathon: expo & packet pickup crew":["2027-02-06","Sat Feb 6, 2027","https://www.tallahasseemarathon.com"],
+ "FSU home football: concession stand (NC State)":["2026-11-21","Sat Nov 21, 2026","https://leoncountyfl.galaxydigital.com"],
+ "FSU home football: concession stand (5-person crew)":["2026-11-27","Fri Nov 27, 2026 (confirm home game)","https://www.idealist.org/en/volunteer-opportunity/908f5e680edb44ca806ce4ac2abf669a-volunteers-needed-for-fsu-home-football-games-this-fall-2026-society-for-charity-tallahassee"],
+ "Semester move-out hauling crew":["2026-12-12","Mid-Dec 2026","" ],
+ "Holiday-lights installation crew":["2026-11-15","Nov–Dec 2026","" ] };
+const SEED_VER = 3;
 
 function seedJobs() {
   return SEED_JOBS.map(j => {
-    const g = GROUP[j[0]];
-    return { id: uid(), title: j[0], cat: j[1], rate: j[2], hours: j[3], tips: j[4], group: !!g, payout: g ? g[0] : 0, crew: g ? g[1] : 1,
+    const g = GROUP[j[0]], ev = EVENT[j[0]] || [];
+    return { on: ev[0] || "", date: ev[1] || "", url: ev[2] || "", id: uid(), title: j[0], cat: j[1], rate: j[2], hours: j[3], tips: j[4], group: !!g, payout: g ? g[0] : 0, crew: g ? g[1] : 1,
       area: j[5], when: j[6], months: j[7], how: j[8], query: j[9], desc: j[10] };
   });
 }
@@ -116,7 +154,7 @@ function defaults() {
     trip: { ...DEF_TRIP },
     grade: { ...DEF_GRADE }, lsort: "grade", lmin: "", selRed: false,
     lodging: L, transport: T, selL: L[0].id, selT: T[0].id,
-    jobs: seedJobs(), plan: {}
+    jobs: seedJobs(), jobsV: SEED_VER, plan: {}
   };
 }
 // fill in anything a saved/imported file from an older version doesn't have
@@ -126,6 +164,15 @@ function normalize(s) {
   s.lsort = s.lsort || "grade"; s.lmin = s.lmin || ""; s.selRed = !!s.selRed;
   s.lodging.forEach(l => { if (l.miles === undefined) l.miles = null; if (l.mins === undefined) l.mins = null; });
   if (s.lodging.length && s.lodging.every(l => /^Sample/.test(l.name) && !l.src)) { s.lodging = researchedLodging(); s.selL = s.lodging[0].id; } // swap the old sample stays for the researched ones
+  if (s.jobsV !== SEED_VER) { // swap the old generic job list for the researched freelance one; keep jobs the user added
+    const oldT = new Set(["Stadium / arena event staff","Event setup & teardown crew","Festival & market vendor help","Catering server / banquet","Bartender / barback (21+)","Restaurant host / busser","Moving help (load & haul)","Apartment move-out cleaning","Junk removal / hauling","Yard work & landscaping","Leaf & gutter cleanup","Holiday-lights installation","Seasonal retail & gift wrap","Mobile car wash / detailing","Tutoring (math, SAT/ACT, chem)","Youth strength / sports coach","Personal training (cert. required)","Babysitting / nanny","Pet sitting / dog walking","Campus Rec official / lifeguard","Paid research studies","Summer orientation staff","Food / grocery delivery","Warehouse / package sorting","Restaurant “spirit night”","Community Olympic-lifting clinic","Team car wash","Stadium concession stand (org payout)"]);
+    const custom = s.jobs.filter(j => !oldT.has(j.title) && CATS.includes(j.cat)).map(j => ({ on: "", date: "", url: "", ...j }));
+    const custom2 = s.jobs.filter(j => !oldT.has(j.title) && !CATS.includes(j.cat)).map(j => ({ on: "", date: "", url: "", ...j, cat: "On-demand Gigs" }));
+    const fresh = seedJobs(), byT = Object.fromEntries(fresh.map(j => [j.title, j.id])), plan = {};
+    s.jobs.forEach(j => { if (byT[j.title] && s.plan && s.plan[j.id]) plan[byT[j.title]] = s.plan[j.id]; else if (!oldT.has(j.title) && s.plan && s.plan[j.id]) plan[j.id] = s.plan[j.id]; });
+    s.jobs = fresh.concat(custom, custom2); s.plan = plan; s.jobsV = SEED_VER;
+  }
+  s.jobs.forEach(j => { if (j.on === undefined) j.on = ""; if (j.date === undefined) j.date = ""; if (j.url === undefined) j.url = ""; });
   s.transport.forEach(t => {
     if (t.type === "van" && t.extra === undefined) { t.extra = Math.max(0, (+t.days || 0) - (+s.trip.nights || 3) - 1); delete t.days; }
     if (t.type === "bus") { if (t.layover === undefined) t.layover = 0; if (t.driverHotel === undefined) t.driverHotel = 0; }

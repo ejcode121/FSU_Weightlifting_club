@@ -2,8 +2,8 @@
 /* ================= UI ================= */
 const ico = (id, cls = "") => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-${id}"/></svg>`;
 const usdK = n => Math.abs(n) >= 1000 ? `$${+(n / 1000).toFixed(Math.abs(n) >= 10000 ? 1 : 2)}K` : usd(n, n % 1 ? 2 : 0);
-const CAT_ICO = { "Events & Game Day": "ticket", "Moving & Labor": "box", "Food & Hospitality": "fork", "Yard & Home": "home",
-  "Tutoring & Coaching": "book", "Campus & Research": "flask", "Delivery & Gigs": "bag", "Team Fundraisers": "people" };
+const CAT_ICO = { "Race & Meet Crews": "pin", "Game Day & Concessions": "ticket", "Team Events": "people", "Moving & Labor": "box", "Yard & Home": "home",
+  "Coaching & Tutoring": "book", "On-demand Gigs": "bag" };
 const T_ICO = { van: "van", bus: "bus", flight: "plane", cars: "cars", perperson: "ticket" };
 const EARLY = { fee: 145, date: new Date(2027, 2, 4) };
 const openCards = new Set();
@@ -241,7 +241,7 @@ function searchLinks(j) {
 const stepper = n => `<div class="stepper"><button type="button" data-step="-1" aria-label="Fewer shifts">${ico("minus")}</button><output><b>${n}</b><small>/ month</small></output><button type="button" data-step="1" aria-label="More shifts">${ico("plus")}</button></div>`;
 function renderJobs() {
   const list = S.jobs.filter(jobMatches).sort((a, b) =>
-    F.sort === "hourly" ? hourly(b) - hourly(a) : F.sort === "short" ? num(a.hours) - num(b.hours) : earn(b) - earn(a));
+    F.sort === "soon" ? (a.on || "9999").localeCompare(b.on || "9999") : F.sort === "hourly" ? hourly(b) - hourly(a) : F.sort === "short" ? num(a.hours) - num(b.hours) : earn(b) - earn(a));
   $("#resCount").textContent = `${list.length} of ${S.jobs.length} jobs`;
   if (!list.length) { $("#jobList").innerHTML = `<div class="empty"><b>No jobs</b><button class="btn" type="button" id="clearF">Clear filters</button></div>`; return; }
   $("#jobList").innerHTML = list.map(j => {
@@ -252,8 +252,8 @@ function renderJobs() {
         <div class="job-pay"><b>${usd(e)}</b><small>per shift</small></div></div>
       <p class="brk">${j.group ? `${usd(j.payout)} ÷ ${j.crew}` : `${usd(j.rate)}/hr × ${j.hours}h${j.tips ? ` + ${usd(j.tips)} tips` : ""}`}</p>
       <div class="facts">${j.group ? `<span class="tag">Team effort</span>` : ""}${n ? `<span class="tag in">In your plan</span>` : ""}
-        <span class="chip">${ico("pin")}${AREA[j.area]}</span>${j.when.map(w => `<span class="chip">${WHEN[w]}</span>`).join("")}<span class="chip">${seasonText(j)}</span></div>
-      <div class="links">${searchLinks(j)}<button type="button" class="btn ghost sm" data-edit style="min-height:32px;padding:2px 0">${ico("edit")}Edit</button></div>
+        <span class="chip">${ico("pin")}${AREA[j.area]}</span>${j.when.map(w => `<span class="chip">${WHEN[w]}</span>`).join("")}<span class="chip">${j.date ? esc(j.date) : seasonText(j)}</span>${j.group ? `<span class="chip">${j.crew} people</span>` : ""}</div>
+      <div class="links">${j.url ? `<a href="${esc(j.url)}" target="_blank" rel="noopener">Event page</a>` : ""}${searchLinks(j)}<button type="button" class="btn ghost sm" data-edit style="min-height:32px;padding:2px 0">${ico("edit")}Edit</button></div>
       <div class="job-foot">
         <div class="need"><div class="pips" aria-hidden="true">${Array.from({ length: pips }, (_, i) => `<i class="pip ${i < n ? "on" : ""}"></i>`).join("")}</div>
           <span>${need ? `${need} a month to reach ${usd(target())}` : "No pay set"}</span></div>
@@ -460,7 +460,7 @@ $("#addJob").onclick = () => openJob(null);
 
 // job dialog
 function openJob(id) {
-  const j = id ? S.jobs.find(x => x.id === id) : { title: "", cat: CATS[0], rate: 15, hours: 4, tips: 0, group: false, payout: 0, crew: 1, area: "near", when: ["weekend"], months: null, how: "", query: "", desc: "" };
+  const j = id ? S.jobs.find(x => x.id === id) : { title: "", cat: CATS[0], rate: 15, hours: 4, tips: 0, group: false, payout: 0, crew: 1, on: "", date: "", url: "", area: "near", when: ["weekend"], months: null, how: "", query: "", desc: "" };
   const f = $("#jobForm");
   f.innerHTML = `
     <h2>${id ? "Edit job" : "Add a job"}</h2>
@@ -482,6 +482,8 @@ function openJob(id) {
     <div class="grid" style="margin-top:14px;grid-template-columns:1fr">
       <label class="field">Description<textarea name="desc" rows="2">${esc(j.desc)}</textarea></label>
       <label class="field">Where to find it, or who to contact<textarea name="how" rows="2">${esc(j.how)}</textarea></label>
+      <label class="field">Event date label (optional)<input type="text" name="date" value="${esc(j.date)}"></label>
+      <label class="field">Event link (optional)<input type="url" name="url" value="${esc(j.url)}"></label>
       <label class="field">Search words for the Indeed, Handshake and Craigslist links<input type="text" name="query" value="${esc(j.query)}"></label>
     </div>
     <div class="row" style="margin-top:18px;justify-content:space-between">
@@ -495,7 +497,7 @@ function openJob(id) {
     const d = new FormData(f), mo = d.getAll("mo").map(Number);
     const out = { title: d.get("title").trim(), cat: d.get("cat"), area: d.get("area"), group: d.has("group"),
       rate: num(d.get("rate")), hours: Math.max(.5, num(d.get("hours"))), tips: num(d.get("tips")), payout: num(d.get("payout")), crew: Math.max(1, num(d.get("crew"))),
-      when: d.getAll("when"), months: mo.length && mo.length < 12 ? mo : null, desc: d.get("desc"), how: d.get("how"), query: d.get("query").trim() };
+      when: d.getAll("when"), months: mo.length && mo.length < 12 ? mo : null, desc: d.get("desc"), how: d.get("how"), query: d.get("query").trim(), date: d.get("date").trim(), url: d.get("url").trim() };
     if (!out.when.length) out.when = ["weekday"];
     if (id) Object.assign(S.jobs.find(x => x.id === id), out); else S.jobs.push({ id: uid(), ...out });
     save(); refreshLight(); toast(id ? "Job saved." : "Job added.");

@@ -96,3 +96,10 @@ Stay map (venue at center, rings, pins graded A–D, hollow pins = nearby) and a
 
 ## Researched Airbnbs (src/core.js RESEARCHED)
 Checked on airbnb.com via Claude in Chrome on Oct 11 2026: Richmond, Apr 13–16 2027, 18 guests, filter 9+ beds (2 per bed → sleeps = beds × 2). 10 listings replace the old samples (old saved sample stays are swapped automatically in `normalize`). Prices are Airbnb's all-in totals; nightly = 3-night total − 2-night total, remainder goes in "cleaning" (so the red-eye 2-night version is priced from a real 2-night quote). Fan home had no 2-night quote (flagged); two listings had a negative fixed part, so they use total÷3. Road miles/minutes from OSRM; coordinates from Airbnb's search data. Four Moseley estates are ~20 mi / 33 min away (grade D). Not counted: couch capacity (unknown from search cards), Jackson Ward duplex (8 beds). Prices/availability change, so re-check before booking.
+
+
+## Freelance gigs (Oct 2026 – Apr 1, 2027)
+- Job list replaced by researched, dated freelance/event gigs (src/core.js: SEED_JOBS, GROUP, EVENT; SEED_VER=3 migrates saved data and keeps user-added jobs).
+- Sources checked in Chrome: FHSAA XC State Finals Nov 20 (Apalachee Regional Park), NCAA South Regional XC (mid-Nov, date unconfirmed), Turkey Trot Nov 26, Tallahassee Marathon Feb 7 2027, FSU home football concession stands (Volunteer Leon / Idealist), Instawork Tallahassee.
+- Springtime Tallahassee (Apr 2–3 2027) falls inside the 2-week pre-meet window, so it is excluded.
+- Group payouts are ESTIMATES (organizers do not publish them); confirm each rate in writing. Whole-team crews use crew=16; 5-person crews also listed.
