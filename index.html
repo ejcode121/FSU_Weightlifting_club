@@ -161,6 +161,7 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font
       <label class="f">Food per person per day ($)<input type="number" min="0" data-trip="food"></label>
       <label class="f">Other team costs, total ($)<input type="number" min="0" data-trip="misc"></label>
     </div>
+    <p class="hint" style="margin-top:8px">USAW entry fee (per lifter, per USAW’s Aug 2026 announcement): <b>$145</b> early bird through Mar 4, 2027 · <b>$175</b> regular through Mar 18 · <b>$375</b> late through Apr 1 (2:00 p.m. MT). Registration opens Jan 1, 2027. Default is the $175 regular fee; paying early saves $30 each ($540 for 18). USAW membership is not included.</p>
     <p class="hint" style="margin-top:8px" id="schedLine"></p>
     <p class="hint" style="margin-top:4px" id="extrasLine"></p>
   </div>
@@ -338,7 +339,7 @@ const THINTS = {
   flight: "Ground transport = airport rides at home plus getting around Richmond for the whole team."
 };
 const DEF_GRADE = { wDist: 50, near: 1, far: 10, cheap: 40, pricey: 110 };
-const DEF_TRIP = { dest: "USAW University Nationals – Richmond, VA (Apr 15–18, 2027)", nights: 3, meetDay: "", reg: 0, food: 30, misc: 0 };
+const DEF_TRIP = { dest: "USAW University Nationals – Richmond, VA (Apr 15–18, 2027)", nights: 3, meetDay: "", reg: 175, food: 30, misc: 0 };
 
 function defaults() {
   const L = [

@@ -16,7 +16,9 @@ Built in `index.html`:
 - `normalize()` upgrades older saved/imported data; storage key bumped to `fsu-lifting-budget-v2` (v1 placeholder data not migrated).
 - Tested headless (34 checks: costs, grades, red-eye rule, sort/filter, persistence, legacy import, export, reset, job add/edit/delete dialog paths, dark mode load). Still untested: real phone, Safari.
 
-Still placeholders / to verify: all prices, ~1,500 mi round-trip driving estimate, entry fee, bus hours-of-service (a ~10–11 h drive may need two drivers or a rest stop — ask the charter company), host late check-out for red-eye. Job list (Phase 2) is **not** updated yet.
+Entry fee researched (USAW 2027 calendar announcement + event page, both agree): $145 early bird (closes Mar 4 2027), $175 regular (Mar 18), $375 late (Apr 1), 2:00 p.m. MT; registration opens Jan 1 2027; qualifying window Mar 18 2026–Mar 18 2027. Planner default = $175/lifter. USAW annual athlete membership ($65 junior 18–20, $79 senior 21–34) is NOT included; confirm whether it's required.
+
+Still placeholders / to verify: all prices, ~1,500 mi round-trip driving estimate, bus hours-of-service (a ~10–11 h drive may need two drivers or a rest stop — ask the charter company), host late check-out for red-eye. Job list (Phase 2) is **not** updated yet.
 
 _(Sections below describe v1 and are otherwise still accurate; the old 7-month / `days` van field / sample list notes are superseded by this section.)_
 
