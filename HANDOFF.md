@@ -1,6 +1,24 @@
 # Handoff — FSU Weightlifting Trip Budget & Fundraising Planner
 
-_Last updated: 2026-10-11 · Branch: `claude/fsu-budget-calculator-wfvkko` · Latest commit: `3124ed5`_
+_Last updated: 2026-10-11 · Branch: `claude/fsu-budget-calculator-wfvkko`_
+
+## 0. Update — Richmond scenario build (v2)
+Requester confirmed: **USAW University Nationals, Richmond VA, Apr 15–18, 2027** (Greater Richmond Convention Center). Arrive 2 days
+before the meet, 1 rest day, compete, clean up, then either drive home next morning (**3 nights**) or red-eye home (**2 nights**).
+Red-eye only if there is a charter driver or a flight; vans do not red-eye. Multiple options are the point of the calculator.
+
+Built in `index.html`:
+- Fundraising window now **6 months** (Nov 2026 → Apr 2027): $11,000 ÷ 18 ÷ 6 = **$101.85/student/month**; default monthly target raised to $110.
+- **Airbnbs**: miles + drive-minutes to venue, A–D grade (distance + $/person/night; settings in "Grading settings"), sort by grade/cost/distance, grade filter.
+- **Transport** limited to van / charter bus / flight (older types still load). Van rental days = nights + 1 + extra; bus = base + layover days + driver hotel + tip; flight adds ground transport. Per-transport "Allow red-eye" checkbox (default on for bus/flight, off for van).
+- **Matrix** = Airbnb × transport × nights; bus and flight appear twice (3-night stay-over, 2-night red-eye).
+- Optional "day your lifters compete" date field prints the arrive/meet/home dates and a late-check-out reminder for red-eye.
+- `normalize()` upgrades older saved/imported data; storage key bumped to `fsu-lifting-budget-v2` (v1 placeholder data not migrated).
+- Tested headless (34 checks: costs, grades, red-eye rule, sort/filter, persistence, legacy import, export, reset, job add/edit/delete dialog paths, dark mode load). Still untested: real phone, Safari.
+
+Still placeholders / to verify: all prices, ~1,500 mi round-trip driving estimate, entry fee, bus hours-of-service (a ~10–11 h drive may need two drivers or a rest stop — ask the charter company), host late check-out for red-eye. Job list (Phase 2) is **not** updated yet.
+
+_(Sections below describe v1 and are otherwise still accurate; the old 7-month / `days` van field / sample list notes are superseded by this section.)_
 
 ## 1. Goal (from the requester)
 Interactive, easy-to-use budget calculator for the FSU weightlifting team (18 participants) that:

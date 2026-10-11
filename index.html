@@ -65,6 +65,20 @@ table.mx td{padding:0}
 .cell.ok{background:var(--ok-bg);color:var(--ok)}.cell.warn{background:var(--warn-bg);color:var(--warn)}.cell.bad{background:var(--bad-bg);color:var(--bad)}
 .cell.sel{border-color:var(--garnet);box-shadow:0 0 0 2px var(--garnet)}
 .cell.best::after{content:"★ cheapest";display:block;font-size:.65rem}
+table.mx th small{display:block;font-weight:400;color:var(--mute)}
+table.mx th{min-width:96px}
+.grade{display:inline-flex;align-items:center;justify-content:center;width:1.9em;height:1.9em;border-radius:50%;font-weight:800;font-size:.85rem;flex:none}
+.grade.gA{background:var(--ok);color:var(--bg)}
+.grade.gB{background:var(--ok-bg);color:var(--ok);border:2px solid var(--ok)}
+.grade.gC{background:var(--warn-bg);color:var(--warn);border:2px solid var(--warn)}
+.grade.gD{background:var(--bad);color:var(--bg)}
+.grade.gx{background:var(--bg);color:var(--mute);border:1px dashed var(--mute)}
+table.mx .grade{width:1.6em;height:1.6em;font-size:.72rem;margin-right:5px}
+details.sub{border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:0 0 10px;background:var(--bg)}
+details.sub summary{cursor:pointer;font-weight:600;font-size:.9rem}
+.tog{display:flex;align-items:center;gap:8px;font-size:.88rem;margin-top:8px}
+.tog input{width:20px;height:20px;accent-color:var(--garnet);flex:none}
+.opt .hint.sm{font-size:.8rem;margin:6px 0 0}
 .scroll{overflow-x:auto}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
 .chip{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:5px 12px;cursor:pointer;font-size:.88rem}
@@ -106,7 +120,7 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font
 <header class="top">
   <div class="wrap">
     <h1>🏋️ FSU Weightlifting — Trip Budget &amp; Fundraising Planner</h1>
-    <p>Pick lodging + transportation → see the cost → find local shifts that raise it.</p>
+    <p>USAW University Nationals · Richmond, VA · Apr 15–18, 2027 — compare Airbnbs + transportation → see the cost → find shifts that raise it.</p>
   </div>
   <nav class="tabs" role="tablist">
     <button role="tab" data-tab="trip" aria-selected="true">1 · Trip</button>
@@ -129,6 +143,7 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font
       <label class="f">First fundraising month<input type="month" data-team="start"></label>
       <label class="f">Monthly target / student ($)<input type="number" min="0" step="5" data-team="target"></label>
     </div>
+    <p class="hint" style="margin-top:8px">The meet is Apr 15–18, 2027, so Nov 2026 → Apr 2027 is 6 months — and April only counts until you leave. The bar above shows what each student needs per month for the goal.</p>
     <div class="row" style="margin-top:10px">
       <label><input type="radio" name="gm" value="fixed" data-gm> Fixed goal</label>
       <input type="number" min="0" step="100" data-team="goal" style="max-width:130px">
@@ -140,29 +155,45 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font
     <h2>Trip basics</h2>
     <div class="grid">
       <label class="f">Destination / meet<input type="text" data-trip="dest" placeholder="e.g. Nationals – City, ST"></label>
-      <label class="f">Nights<input type="number" min="1" data-trip="nights"></label>
+      <label class="f">Nights (stay-over version)<input type="number" min="1" data-trip="nights"></label>
+      <label class="f">Day your lifters compete<input type="date" data-trip="meetDay" min="2027-04-15" max="2027-04-18"></label>
       <label class="f">Entry / registration fee per lifter ($)<input type="number" min="0" data-trip="reg"></label>
       <label class="f">Food per person per day ($)<input type="number" min="0" data-trip="food"></label>
       <label class="f">Other team costs, total ($)<input type="number" min="0" data-trip="misc"></label>
     </div>
-    <p class="hint" style="margin-top:8px" id="extrasLine"></p>
+    <p class="hint" style="margin-top:8px" id="schedLine"></p>
+    <p class="hint" style="margin-top:4px" id="extrasLine"></p>
   </div>
 
   <div class="card">
-    <div class="row" style="justify-content:space-between"><h2>🏠 Airbnb / lodging options</h2><button class="btn sm pri" id="addL">+ Add Airbnb</button></div>
-    <p class="hint">Paste the listing price breakdown. We figure out how many places are needed for the whole team. Select one to use it in the budget.</p>
+    <div class="row" style="justify-content:space-between"><h2>🏠 Airbnb options near the venue</h2><button class="btn sm pri" id="addL">+ Add Airbnb</button></div>
+    <p class="hint">Venue: Greater Richmond Convention Center. Add each listing's price breakdown and how far it is from the venue (use Google/Apple Maps). Each one is graded A–D from distance + cost per person. We work out how many places the whole team needs. Select one to use it in the budget.</p>
+    <details class="sub"><summary>Grading settings</summary>
+      <div class="grid" style="margin-top:8px">
+        <label class="f">Distance counts for (% of grade)<input type="number" min="0" max="100" data-gset="wDist"></label>
+        <label class="f">Walkable up to (miles)<input type="number" min="0" step="any" data-gset="near"></label>
+        <label class="f">Too far from (miles)<input type="number" min="0" step="any" data-gset="far"></label>
+        <label class="f">Great price up to ($/person/night)<input type="number" min="0" step="any" data-gset="cheap"></label>
+        <label class="f">Too pricey from ($/person/night)<input type="number" min="0" step="any" data-gset="pricey"></label>
+      </div>
+      <p class="hint" style="margin:8px 0 0">Price counts for the rest of the grade. Score 75+ = A, 55+ = B, 35+ = C, below = D. A listing with no distance can’t be graded.</p>
+    </details>
+    <div class="filters" style="margin:0 0 10px">
+      <label class="f">Sort by<select id="lSort"><option value="grade">Best grade first</option><option value="cost">Lowest total cost first</option><option value="dist">Closest to venue first</option></select></label>
+      <label class="f">Show<select id="lMin"><option value="">All listings</option><option value="C">Grade C or better</option><option value="B">Grade B or better</option><option value="A">Grade A only</option></select></label>
+    </div>
     <div id="lodgingList"></div>
   </div>
 
   <div class="card">
     <div class="row" style="justify-content:space-between"><h2>🚐 Transportation options</h2><button class="btn sm pri" id="addT">+ Add transportation</button></div>
-    <p class="hint">Flights, rental vans, personal cars (gas), charter bus, or a flat per-person cost.</p>
+    <p class="hint">Rental vans, charter bus, or flights. A red-eye home (leave the night of the meet) is only allowed where a professional driver or a flight does the overnight leg — vans default to staying the extra night.</p>
     <div id="transList"></div>
   </div>
 
   <div class="card">
-    <h2>Cross-reference: every lodging × transport combo</h2>
-    <p class="hint">Total team cost (and per person). Green = within your goal, yellow = within 15% over, red = further over. Tap a cell to select that combo.</p>
+    <h2>Cross-reference: every Airbnb × transportation × nights</h2>
+    <p class="hint">Total team cost (and per person). Green = within your goal, yellow = within 15% over, red = further over. Charter-bus and flight columns appear twice: the full stay-over, and a red-eye version with one fewer night. For red-eye, ask hosts about late check-out on meet day. Tap a cell to select it.</p>
     <div class="scroll" id="matrix"></div>
   </div>
 </section>
@@ -228,7 +259,7 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font
 
 <script>
 "use strict";
-const KEY = "fsu-lifting-budget-v1";
+const KEY = "fsu-lifting-budget-v2";
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const CATS = ["Events & Game Day","Moving & Labor","Food & Hospitality","Yard & Home","Tutoring & Coaching","Campus & Research","Delivery & Gigs","Team Fundraisers"];
 const $ = (s, r = document) => r.querySelector(s);
@@ -283,44 +314,67 @@ function seedJobs() {
       area: j[5], when: j[6], months: j[7], how: j[8], query: j[9], desc: j[10] };
   });
 }
+// All dollar figures below are placeholders ("Sample") until the team has real quotes.
+// redeye = may the team leave the night of the meet (one fewer night)? Only with a pro driver or a flight.
 const TDEF = {
-  flight:   { fare: 350, bags: 70 },
-  van:      { seats: 15, daily: 110, days: 4, miles: 900, mpg: 12, gas: 3.1, tolls: 0 },
-  cars:     { seats: 4, miles: 900, mpg: 28, gas: 3.1, tolls: 0 },
-  bus:      { quote: 4500, tip: 200 },
-  perperson:{ fare: 150 }
+  flight:   { fare: 350, bags: 70, ground: 600, redeye: true },
+  van:      { seats: 15, daily: 110, extra: 0, miles: 1500, mpg: 12, gas: 3.1, tolls: 50, redeye: false },
+  bus:      { quote: 6500, layover: 450, driverHotel: 140, tip: 300, redeye: true },
+  cars:     { seats: 4, miles: 1500, mpg: 28, gas: 3.1, tolls: 50, redeye: false },
+  perperson:{ fare: 150, redeye: false }
 };
 const TFIELDS = {
-  flight:   [["fare","Round-trip fare / person ($)"],["bags","Bags & fees / person ($)"]],
-  van:      [["seats","Seats per van"],["daily","Rental $/day"],["days","Rental days"],["miles","Round-trip miles"],["mpg","Van MPG"],["gas","Gas $/gal"],["tolls","Tolls/parking per van ($)"]],
+  flight:   [["fare","Round-trip fare / person ($)"],["bags","Bags & fees / person ($)"],["ground","Ground transport, whole team ($)"]],
+  van:      [["seats","Seats per van"],["daily","Rental $/day"],["extra","Extra rental days"],["miles","Round-trip miles (incl. local)"],["mpg","Van MPG"],["gas","Gas $/gal"],["tolls","Tolls/parking per van ($)"]],
   cars:     [["seats","People per car"],["miles","Round-trip miles"],["mpg","Car MPG"],["gas","Gas $/gal"],["tolls","Tolls/parking per car ($)"]],
-  bus:      [["quote","Charter quote ($)"],["tip","Driver tip ($)"]],
+  bus:      [["quote","Charter base quote, round trip ($)"],["layover","Layover fee per idle day ($)"],["driverHotel","Driver hotel per night ($)"],["tip","Driver tip ($)"]],
   perperson:[["fare","Cost per person ($)"]]
 };
 const TNAMES = { flight:"✈️ Flight", van:"🚐 Rental van", cars:"🚗 Personal cars", bus:"🚌 Charter bus", perperson:"🚆 Other (per person)" };
+const TYPES = ["van", "bus", "flight"]; // offered in the type dropdown (older saved types still display)
+const THINTS = {
+  van: "Rental days = nights + 1 + extra days. Red-eye is off by default: the team would be driving overnight right after competing.",
+  bus: "Cost = base quote + layover days idle in Richmond + driver hotel + tip. A drive this long may exceed one driver’s legal hours — ask whether two drivers or a rest stop are included.",
+  flight: "Ground transport = airport rides at home plus getting around Richmond for the whole team."
+};
+const DEF_GRADE = { wDist: 50, near: 1, far: 10, cheap: 40, pricey: 110 };
+const DEF_TRIP = { dest: "USAW University Nationals – Richmond, VA (Apr 15–18, 2027)", nights: 3, meetDay: "", reg: 0, food: 30, misc: 0 };
 
 function defaults() {
-  const d = new Date(); const n = new Date(d.getFullYear(), d.getMonth() + 1, 1);
   const L = [
-    { id: uid(), name: "Sample: 5-bedroom house", url: "", nightly: 420, cleaning: 150, service: 180, tax: 12, sleeps: 10 },
-    { id: uid(), name: "Sample: 3-bedroom apartment", url: "", nightly: 260, cleaning: 100, service: 110, tax: 12, sleeps: 6 },
-    { id: uid(), name: "Sample: Budget bunk rooms", url: "", nightly: 190, cleaning: 80, service: 90, tax: 12, sleeps: 8 }
+    { id: uid(), name: "Sample: 5-bedroom house, close to venue", url: "", nightly: 420, cleaning: 150, service: 180, tax: 12, sleeps: 10, miles: 1.2, mins: 6 },
+    { id: uid(), name: "Sample: 3-bedroom apartment, mid-distance", url: "", nightly: 260, cleaning: 100, service: 110, tax: 12, sleeps: 6, miles: 4.5, mins: 14 },
+    { id: uid(), name: "Sample: Budget bunk house, far out", url: "", nightly: 190, cleaning: 80, service: 90, tax: 12, sleeps: 8, miles: 11, mins: 25 }
   ];
   const T = [
     { id: uid(), type: "van", name: "Sample: 15-passenger vans", ...TDEF.van },
-    { id: uid(), type: "cars", name: "Sample: Personal cars", ...TDEF.cars },
-    { id: uid(), type: "flight", name: "Sample: Flights", ...TDEF.flight },
-    { id: uid(), type: "bus", name: "Sample: Charter bus", ...TDEF.bus }
+    { id: uid(), type: "bus", name: "Sample: Charter bus with driver", ...TDEF.bus },
+    { id: uid(), type: "flight", name: "Sample: Flights", ...TDEF.flight }
   ];
   return {
-    team: { people: 18, months: 7, start: `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}`, target: 100, goalMode: "fixed", goal: 11000 },
-    trip: { dest: "", nights: 3, reg: 0, food: 30, misc: 0 },
+    team: { people: 18, months: 6, start: "2026-11", target: 110, goalMode: "fixed", goal: 11000 },
+    trip: { ...DEF_TRIP },
+    grade: { ...DEF_GRADE }, lsort: "grade", lmin: "", selRed: false,
     lodging: L, transport: T, selL: L[0].id, selT: T[0].id,
     jobs: seedJobs(), plan: {}
   };
 }
+// fill in anything a saved/imported file from an older version doesn't have
+function normalize(s) {
+  s.trip = Object.assign({}, DEF_TRIP, s.trip);
+  s.grade = Object.assign({}, DEF_GRADE, s.grade);
+  s.lsort = s.lsort || "grade"; s.lmin = s.lmin || ""; s.selRed = !!s.selRed;
+  s.lodging.forEach(l => { if (l.miles === undefined) l.miles = null; if (l.mins === undefined) l.mins = null; });
+  s.transport.forEach(t => {
+    if (t.type === "van" && t.extra === undefined) { t.extra = Math.max(0, (+t.days || 0) - (+s.trip.nights || 3) - 1); delete t.days; }
+    if (t.type === "bus") { if (t.layover === undefined) t.layover = 0; if (t.driverHotel === undefined) t.driverHotel = 0; }
+    if (t.type === "flight" && t.ground === undefined) t.ground = 0;
+    if (t.redeye === undefined) t.redeye = t.type === "bus" || t.type === "flight";
+  });
+  return s;
+}
 function load() {
-  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.team && s.jobs) return s; } catch (e) {}
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.team && s.jobs && s.lodging && s.transport) return normalize(s); } catch (e) {}
   return null;
 }
 let S = load() || defaults();
@@ -328,29 +382,74 @@ function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e
 
 /* ---------------- calculations ---------------- */
 const num = v => (isFinite(+v) ? +v : 0);
-const days = () => num(S.trip.nights) + 1;
-function lodgingCost(l) {
+// Schedule model: arrive 2 days before the meet, 1 rest day, compete, then either
+//   stay the night and drive home next morning (nights = base, default 3), or
+//   red-eye home right after the meet (nights = base − 1) — only if that transport allows it.
+const baseNights = () => Math.max(1, num(S.trip.nights));
+const daysFor = n => n + 1;
+const hasRed = t => !!(t && t.redeye) && baseNights() > 1;
+const nightsFor = (t, red) => (red && hasRed(t)) ? baseNights() - 1 : baseNights();
+function lodgingCost(l, n = baseNights()) {
   const units = Math.max(1, Math.ceil(num(S.team.people) / Math.max(1, num(l.sleeps))));
-  const total = units * (num(l.nightly) * num(S.trip.nights) + num(l.cleaning) + num(l.service)) * (1 + num(l.tax) / 100);
+  const total = units * (num(l.nightly) * n + num(l.cleaning) + num(l.service)) * (1 + num(l.tax) / 100);
   return { units, total, label: `${units} place${units > 1 ? "s" : ""}` };
 }
-function transportCost(t) {
+function transportCost(t, n = baseNights()) {
   const p = num(S.team.people);
   switch (t.type) {
-    case "flight": return { total: p * (num(t.fare) + num(t.bags)), label: `${p} seats` };
-    case "van": { const u = Math.max(1, Math.ceil(p / Math.max(1, num(t.seats))));
-      return { total: u * (num(t.daily) * num(t.days) + num(t.miles) / Math.max(1, num(t.mpg)) * num(t.gas) + num(t.tolls)), label: `${u} van${u > 1 ? "s" : ""}` }; }
+    case "flight": return { total: p * (num(t.fare) + num(t.bags)) + num(t.ground), label: `${p} seats` };
+    case "van": { const u = Math.max(1, Math.ceil(p / Math.max(1, num(t.seats)))), rd = daysFor(n) + num(t.extra);
+      return { total: u * (num(t.daily) * rd + num(t.miles) / Math.max(1, num(t.mpg)) * num(t.gas) + num(t.tolls)), label: `${u} van${u > 1 ? "s" : ""} × ${rd} days` }; }
     case "cars": { const u = Math.max(1, Math.ceil(p / Math.max(1, num(t.seats))));
       return { total: u * (num(t.miles) / Math.max(1, num(t.mpg)) * num(t.gas) + num(t.tolls)), label: `${u} car${u > 1 ? "s" : ""}` }; }
-    case "bus": return { total: num(t.quote) + num(t.tip), label: "1 bus" };
+    case "bus": return { total: num(t.quote) + num(t.tip) + num(t.layover) * Math.max(0, n - 1) + num(t.driverHotel) * n, label: `1 bus` };
     default: return { total: p * num(t.fare), label: `${p} people` };
   }
 }
-const extras = () => num(S.team.people) * (num(S.trip.reg) + num(S.trip.food) * days()) + num(S.trip.misc);
-const comboCost = (l, t) => lodgingCost(l).total + transportCost(t).total + extras();
+const extras = (n = baseNights()) => num(S.team.people) * (num(S.trip.reg) + num(S.trip.food) * daysFor(n)) + num(S.trip.misc);
+const comboCost = (l, t, n = baseNights()) => lodgingCost(l, n).total + transportCost(t, n).total + extras(n);
 const selL = () => S.lodging.find(x => x.id === S.selL) || S.lodging[0];
 const selT = () => S.transport.find(x => x.id === S.selT) || S.transport[0];
-const tripTotal = () => (selL() && selT()) ? comboCost(selL(), selT()) : extras();
+const selRed = () => !!S.selRed && hasRed(selT());
+const selN = () => nightsFor(selT(), selRed());
+const tripTotal = () => (selL() && selT()) ? comboCost(selL(), selT(), selN()) : extras(selN());
+function variants(t) {
+  const n = baseNights(), v = [{ t, n, red: false }];
+  if (hasRed(t)) v.push({ t, n: n - 1, red: true });
+  return v;
+}
+
+// Airbnb grade (A–D): distance to the venue + price per person per night
+const clamp01 = x => Math.max(0, Math.min(1, x));
+const GRANK = { A: 4, B: 3, C: 2, D: 1 };
+function lodgingGrade(l) {
+  if (l.miles === null || l.miles === undefined || l.miles === "") return null;
+  const g = S.grade, n = baseNights(), people = Math.max(1, num(S.team.people));
+  const pp = lodgingCost(l, n).total / people / n;
+  const d = clamp01(1 - (num(l.miles) - num(g.near)) / Math.max(.1, num(g.far) - num(g.near)));
+  const c = clamp01(1 - (pp - num(g.cheap)) / Math.max(1, num(g.pricey) - num(g.cheap)));
+  const w = clamp01(num(g.wDist) / 100);
+  const score = Math.round((w * d + (1 - w) * c) * 100);
+  return { letter: score >= 75 ? "A" : score >= 55 ? "B" : score >= 35 ? "C" : "D", score, pp, d: Math.round(d * 100), c: Math.round(c * 100) };
+}
+function visibleLodging() {
+  let list = S.lodging.slice();
+  if (S.lmin) list = list.filter(l => { const g = lodgingGrade(l); return l.id === S.selL || (g && GRANK[g.letter] >= GRANK[S.lmin]); });
+  const key = l => S.lsort === "cost" ? lodgingCost(l).total
+    : S.lsort === "dist" ? ((l.miles === null || l.miles === undefined || l.miles === "") ? Infinity : num(l.miles))
+    : (lodgingGrade(l) ? -lodgingGrade(l).score : Infinity);
+  return list.sort((a, b) => key(a) - key(b));
+}
+function scheduleText() {
+  const d = S.trip.meetDay;
+  if (!d) return "Pick the day your lifters compete (the meet runs Apr 15–18) to see your travel dates.";
+  const m = new Date(d + "T12:00:00"); if (isNaN(m)) return "";
+  const n = baseNights();
+  const f = o => new Date(m.getFullYear(), m.getMonth(), m.getDate() + o).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  let s = `${n} nights: arrive ${f(-(n - 1))} · meet ${f(0)} · drive home ${f(1)}.`;
+  if (n > 1) s += ` Red-eye (${n - 1} nights, charter bus or flight only): leave the night of ${f(0)} — check out and clean up after the meet, so ask the host about late check-out.`;
+  return s;
+}
 const goal = () => S.team.goalMode === "trip" ? tripTotal() : num(S.team.goal);
 const neededPerMonth = () => goal() / Math.max(1, num(S.team.people)) / Math.max(1, num(S.team.months));
 const target = () => num(S.team.target);
@@ -379,7 +478,7 @@ function renderSummary() {
   const pill = raised >= g && g > 0 ? `<span class="pill ok">On track +${usd(gap)}</span>` :
     raised === 0 ? `<span class="pill warn">Add shifts in Find Work</span>` : `<span class="pill bad">Short ${usd(-gap)}</span>`;
   $("#summary").innerHTML = `
-    <div class="stat"><small>Trip cost</small><b>${usd(tripTotal())}</b></div>
+    <div class="stat"><small>Trip cost · ${selN()} nights${selRed() ? " red-eye" : ""}</small><b>${usd(tripTotal())}</b></div>
     <div class="stat"><small>Goal</small><b>${usd(g)}</b></div>
     <div class="stat"><small>Need / student / month</small><b>${usd(nd, 2)}</b></div>
     <div class="stat"><small>Plan raises</small><b>${usd(raised)}</b></div>
@@ -390,30 +489,39 @@ function renderSummary() {
 function bindStatic() {
   $$("[data-team]").forEach(el => { el.value = S.team[el.dataset.team]; });
   $$("[data-trip]").forEach(el => { el.value = S.trip[el.dataset.trip]; });
+  $$("[data-gset]").forEach(el => { el.value = S.grade[el.dataset.gset]; });
   $$("[data-gm]").forEach(el => { el.checked = el.value === S.team.goalMode; });
   $('[data-team="goal"]').disabled = S.team.goalMode === "trip";
 }
 function numField(k, label, v) { return `<label class="f">${label}<input type="number" inputmode="decimal" min="0" step="any" data-k="${k}" value="${esc(v)}"></label>`; }
+function optField(k, label, v) {
+  return `<label class="f">${label}<input type="number" inputmode="decimal" min="0" step="any" data-k="${k}" data-opt value="${v === null || v === undefined ? "" : esc(v)}"></label>`;
+}
 function renderLodging() {
-  $("#lodgingList").innerHTML = S.lodging.map(l => `
+  $("#lSort").value = S.lsort; $("#lMin").value = S.lmin;
+  $("#lodgingList").innerHTML = visibleLodging().map(l => `
     <div class="opt ${l.id === S.selL ? "sel" : ""}" data-id="${l.id}" data-kind="L">
       <div class="head">
         <input class="radio" type="radio" name="selL" data-pick aria-label="Use this lodging" ${l.id === S.selL ? "checked" : ""}>
         <input type="text" data-k="name" value="${esc(l.name)}" aria-label="Lodging name">
+        <span data-gbadge="${l.id}"></span>
         <button class="btn sm danger" data-del aria-label="Delete">✕</button>
       </div>
       <div class="grid">
         ${numField("nightly", "Nightly rate ($)", l.nightly)}${numField("cleaning", "Cleaning fee ($)", l.cleaning)}
         ${numField("service", "Service fee ($)", l.service)}${numField("tax", "Taxes (%)", l.tax)}
         ${numField("sleeps", "Sleeps (people)", l.sleeps)}
+        ${optField("miles", "Miles to venue", l.miles)}${optField("mins", "Drive minutes to venue", l.mins)}
         <label class="f">Listing link<input type="url" data-k="url" value="${esc(l.url)}" placeholder="https://airbnb.com/rooms/…"></label>
       </div>
-      <div class="calc"><span data-calc="L:${l.id}"></span></div>
+      <div class="calc"><span data-calc="L:${l.id}"></span><span data-gline="${l.id}"></span></div>
     </div>`).join("") || `<div class="empty">No lodging yet — add an Airbnb.</div>`;
   updateCalcs();
 }
 function renderTransport() {
-  $("#transList").innerHTML = S.transport.map(t => `
+  $("#transList").innerHTML = S.transport.map(t => {
+    const types = TYPES.includes(t.type) ? TYPES : [...TYPES, t.type];
+    return `
     <div class="opt ${t.id === S.selT ? "sel" : ""}" data-id="${t.id}" data-kind="T">
       <div class="head">
         <input class="radio" type="radio" name="selT" data-pick aria-label="Use this transportation" ${t.id === S.selT ? "checked" : ""}>
@@ -421,30 +529,52 @@ function renderTransport() {
         <button class="btn sm danger" data-del aria-label="Delete">✕</button>
       </div>
       <div class="grid">
-        <label class="f">Type<select data-k="type">${Object.entries(TNAMES).map(([k, v]) => `<option value="${k}" ${k === t.type ? "selected" : ""}>${v}</option>`).join("")}</select></label>
+        <label class="f">Type<select data-k="type">${types.map(k => `<option value="${k}" ${k === t.type ? "selected" : ""}>${TNAMES[k]}</option>`).join("")}</select></label>
         ${TFIELDS[t.type].map(([k, lab]) => numField(k, lab, t[k])).join("")}
       </div>
+      <label class="tog"><input type="checkbox" data-k="redeye" ${t.redeye ? "checked" : ""}> Allow a red-eye home (leave the night of the meet — one fewer night)</label>
+      ${THINTS[t.type] ? `<p class="hint sm">${esc(THINTS[t.type])}</p>` : ""}
       <div class="calc"><span data-calc="T:${t.id}"></span></div>
-    </div>`).join("") || `<div class="empty">No transportation yet — add one.</div>`;
+    </div>`;
+  }).join("") || `<div class="empty">No transportation yet — add one.</div>`;
   updateCalcs();
 }
 function updateCalcs() {
-  const people = Math.max(1, num(S.team.people));
-  S.lodging.forEach(l => { const el = $(`[data-calc="L:${l.id}"]`); if (!el) return; const c = lodgingCost(l);
-    el.innerHTML = `${c.label} · <b>${usd(c.total)}</b> total · ${usd(c.total / people)}/person`; });
-  S.transport.forEach(t => { const el = $(`[data-calc="T:${t.id}"]`); if (!el) return; const c = transportCost(t);
-    el.innerHTML = `${c.label} · <b>${usd(c.total)}</b> total · ${usd(c.total / people)}/person`; });
-  $("#extrasLine").textContent = `Per-person extras (entry fee + food for ${days()} days) and other costs: ${usd(extras())} total.`;
+  const people = Math.max(1, num(S.team.people)), n = baseNights();
+  S.lodging.forEach(l => {
+    const el = $(`[data-calc="L:${l.id}"]`); if (!el) return;
+    const c = lodgingCost(l);
+    el.innerHTML = `${c.label} · <b>${usd(c.total)}</b> for ${n} nights · ${usd(c.total / people)}/person`;
+    const g = lodgingGrade(l);
+    $(`[data-gbadge="${l.id}"]`).innerHTML = g
+      ? `<span class="grade g${g.letter}" title="Score ${g.score}/100 — distance ${g.d}, price ${g.c}">${g.letter}</span>`
+      : `<span class="grade gx" title="Add miles to venue to get a grade">?</span>`;
+    $(`[data-gline="${l.id}"]`).innerHTML = g
+      ? `Grade <b>${g.letter}</b> (${g.score}/100) · ${usd(g.pp)}/person/night · ${num(l.miles)} mi${l.mins ? ` · ${num(l.mins)} min drive` : ""}`
+      : `Add miles to the venue to grade this one`;
+  });
+  S.transport.forEach(t => {
+    const el = $(`[data-calc="T:${t.id}"]`); if (!el) return;
+    el.innerHTML = variants(t).map(v => { const c = transportCost(t, v.n);
+      return `${c.label} · <b>${usd(c.total)}</b> for ${v.n} nights${v.red ? " (red-eye home)" : ""} · ${usd(c.total / people)}/person`; }).join("<br>");
+  });
+  $("#schedLine").textContent = scheduleText();
+  $("#extrasLine").textContent = `Per-person extras (entry fee + food for ${daysFor(n)} days) and other team costs: ${usd(extras(n))} total at ${n} nights; a red-eye version drops one night of lodging and food.`;
 }
 function renderMatrix() {
-  if (!S.lodging.length || !S.transport.length) { $("#matrix").innerHTML = `<div class="empty">Add at least one lodging and one transportation option.</div>`; return; }
+  const L = visibleLodging();
+  if (!L.length || !S.transport.length) { $("#matrix").innerHTML = `<div class="empty">Add at least one lodging and one transportation option.</div>`; return; }
   const g = goal(), people = Math.max(1, num(S.team.people));
-  let best = Infinity; S.lodging.forEach(l => S.transport.forEach(t => { best = Math.min(best, comboCost(l, t)); }));
-  const head = `<tr><th></th>${S.transport.map(t => `<th>${esc(t.name)}</th>`).join("")}</tr>`;
-  const rows = S.lodging.map(l => `<tr><th>${esc(l.name)}</th>${S.transport.map(t => {
-    const c = comboCost(l, t), sel = l.id === S.selL && t.id === S.selT;
-    return `<td><button class="cell ${statusClass(c, g)} ${sel ? "sel" : ""} ${c === best ? "best" : ""}" data-l="${l.id}" data-t="${t.id}"><b>${usd(c)}</b>${usd(c / people)}/person</button></td>`;
-  }).join("")}</tr>`).join("");
+  const cols = S.transport.flatMap(variants);
+  let best = Infinity; L.forEach(l => cols.forEach(v => { best = Math.min(best, comboCost(l, v.t, v.n)); }));
+  const head = `<tr><th></th>${cols.map(v => `<th>${esc(v.t.name)}<small>${v.n} nights${v.red ? " · red-eye home" : ""}</small></th>`).join("")}</tr>`;
+  const rows = L.map(l => {
+    const gr = lodgingGrade(l);
+    return `<tr><th><span class="grade ${gr ? "g" + gr.letter : "gx"}">${gr ? gr.letter : "?"}</span>${esc(l.name)}</th>${cols.map(v => {
+      const c = comboCost(l, v.t, v.n), sel = l.id === S.selL && v.t.id === S.selT && v.red === selRed();
+      return `<td><button class="cell ${statusClass(c, g)} ${sel ? "sel" : ""} ${c === best ? "best" : ""}" data-l="${l.id}" data-t="${v.t.id}" data-r="${v.red ? 1 : 0}"><b>${usd(c)}</b>${usd(c / people)}/person</button></td>`;
+    }).join("")}</tr>`;
+  }).join("");
   $("#matrix").innerHTML = `<table class="mx">${head}${rows}</table>`;
 }
 
@@ -554,6 +684,7 @@ function onTop(e) {
   if (el.dataset.team) { S.team[el.dataset.team] = el.type === "number" ? num(el.value) : el.value; }
   else if (el.dataset.trip) { S.trip[el.dataset.trip] = el.type === "number" ? num(el.value) : el.value; }
   else if (el.dataset.gm !== undefined) { S.team.goalMode = el.value; $('[data-team="goal"]').disabled = el.value === "trip"; }
+  else if (el.dataset.gset) { S.grade[el.dataset.gset] = num(el.value); }
   else return;
   save(); refreshLight();
 }
@@ -565,34 +696,41 @@ function listHandlers(rootSel, listName, selKey, kind, rerender) {
   const item = e => { const o = e.target.closest("[data-id]"); return o && S[listName].find(x => x.id === o.dataset.id); };
   root.addEventListener("input", e => {
     const it = item(e), k = e.target.dataset.k; if (!it || !k || k === "type") return;
-    it[k] = e.target.type === "number" ? num(e.target.value) : e.target.value; save(); refreshLight();
+    const t = e.target;
+    it[k] = t.type === "checkbox" ? t.checked
+      : t.type === "number" ? ((t.dataset.opt !== undefined && t.value === "") ? null : num(t.value))
+      : t.value;
+    save(); refreshLight();
   });
   root.addEventListener("change", e => {
     const it = item(e), k = e.target.dataset.k; if (!it || k !== "type") return;
     it.type = e.target.value; Object.entries(TDEF[it.type]).forEach(([kk, v]) => { if (it[kk] === undefined) it[kk] = v; });
+    it.redeye = TDEF[it.type].redeye;
     save(); rerender(); refreshLight();
   });
   root.addEventListener("click", e => {
     const it = item(e); if (!it) return;
-    if (e.target.matches("[data-pick]")) { S[selKey] = it.id; save(); renderLodging(); renderTransport(); refreshLight(); }
+    if (e.target.matches("[data-pick]")) { S[selKey] = it.id; if (selKey === "selT") S.selRed = false; save(); renderLodging(); renderTransport(); refreshLight(); }
     if (e.target.matches("[data-del]")) {
       if (!confirm(`Delete “${it.name}”?`)) return;
       S[listName] = S[listName].filter(x => x !== it);
-      if (S[selKey] === it.id) S[selKey] = S[listName][0]?.id;
+      if (S[selKey] === it.id) { S[selKey] = S[listName][0]?.id; if (selKey === "selT") S.selRed = false; }
       save(); rerender(); refreshLight();
     }
   });
 }
 listHandlers("#lodgingList", "lodging", "selL", "L", renderLodging);
 listHandlers("#transList", "transport", "selT", "T", renderTransport);
-$("#addL").onclick = () => { const l = { id: uid(), name: "New Airbnb", url: "", nightly: 300, cleaning: 100, service: 100, tax: 12, sleeps: 8 };
+$("#addL").onclick = () => { const l = { id: uid(), name: "New Airbnb", url: "", nightly: 300, cleaning: 100, service: 100, tax: 12, sleeps: 8, miles: null, mins: null };
   S.lodging.push(l); if (!S.selL) S.selL = l.id; save(); renderLodging(); refreshLight(); $(`[data-id="${l.id}"] [data-k=name]`).select(); };
 $("#addT").onclick = () => { const t = { id: uid(), type: "van", name: "New transportation", ...TDEF.van };
   S.transport.push(t); if (!S.selT) S.selT = t.id; save(); renderTransport(); refreshLight(); $(`[data-id="${t.id}"] [data-k=name]`).select(); };
 $("#matrix").addEventListener("click", e => {
   const b = e.target.closest(".cell"); if (!b) return;
-  S.selL = b.dataset.l; S.selT = b.dataset.t; save(); renderLodging(); renderTransport(); refreshLight();
+  S.selL = b.dataset.l; S.selT = b.dataset.t; S.selRed = b.dataset.r === "1"; save(); renderLodging(); renderTransport(); refreshLight();
 });
+$("#lSort").onchange = e => { S.lsort = e.target.value; save(); renderLodging(); renderMatrix(); };
+$("#lMin").onchange = e => { S.lmin = e.target.value; save(); renderLodging(); renderMatrix(); };
 
 // jobs filters
 $("#q").addEventListener("input", e => { F.q = e.target.value; renderJobs(); });
@@ -664,7 +802,7 @@ function openJob(id) {
 function summaryText() {
   const ms = monthsList(), per = ms.reduce((s, m) => s + monthEarn(m.cal), 0), g = goal();
   const lines = [`FSU Weightlifting — ${S.trip.dest || "trip"} fundraising plan`,
-    `Trip: ${selL()?.name || "—"} + ${selT()?.name || "—"} = ${usd(tripTotal())} (${usd(tripTotal() / Math.max(1, num(S.team.people)))}/person)`,
+    `Trip: ${selL()?.name || "—"} + ${selT()?.name || "—"}, ${selN()} nights${selRed() ? " (red-eye home)" : ""} = ${usd(tripTotal())} (${usd(tripTotal() / Math.max(1, num(S.team.people)))}/person)`,
     `Goal: ${usd(g)} · ${S.team.people} lifters · ${ms.length} months (${ms[0].label}–${ms[ms.length - 1].label}) · need ${usd(neededPerMonth(), 2)}/student/month`,
     `Monthly shifts per student:`, ...planJobs().map(j => `  • ${S.plan[j.id]}× ${j.title} (${usd(earn(j))}/shift)`),
     `Each student raises ${usd(per)}; team raises ${usd(plannedTotal())} vs goal ${usd(g)}.`];
@@ -685,7 +823,7 @@ $("#importFile").onchange = async e => {
   try {
     const d = JSON.parse(await e.target.files[0].text());
     if (!d.team || !d.jobs || !d.lodging || !d.transport) throw 0;
-    S = d; save(); renderAll(); $("#copyMsg").textContent = "Backup loaded.";
+    S = normalize(d); save(); renderAll(); $("#copyMsg").textContent = "Backup loaded.";
   } catch (err) { alert("That file doesn't look like a budget backup."); }
   e.target.value = "";
 };
