@@ -80,12 +80,32 @@ const THINTS = {
 const DEF_GRADE = { wDist: 50, near: 1, far: 10, cheap: 40, pricey: 110 };
 const DEF_TRIP = { dest: "USAW University Nationals – Richmond, VA (Apr 15–18, 2027)", nights: 3, meetDay: "", reg: 175, food: 30, misc: 0 };
 
+// Researched Oct 11 2026 on airbnb.com: Richmond, Apr 13 to 16 2027, 18 guests, homes with 9+ beds (2 people per bed).
+// Prices are Airbnb's all-in totals. nightly = (3-night total − 2-night total); the rest of the 3-night total goes in "cleaning".
+const AIRBNB_DATES = "checkin=2027-04-13&checkout=2027-04-16&adults=18";
+// [id, name, beds, bedrooms, rating, reviews, total3, total2, lat, lon, miles, mins]
+const RESEARCHED = [
+ ["1015092192647683162","Two modern homes, open-concept living",15,10,4.94,16,2480,1791,37.56013,-77.43953,2.0,5],
+ ["805241141416164519","City skyline views, double-decker patio",10,5,4.89,119,4347,3031,37.53626,-77.45068,2.3,6],
+ ["1205889250411521454","Two connected rowhouses near Carytown",10,6,4.57,37,1997,1307,37.5454,-77.4661,2.9,7],
+ ["1625039498783959627","Historic estate across from the VMFA",9,8,4.83,6,5501,3644,37.55557,-77.47495,3.2,9],
+ ["39032482","Grand historic home in the Fan",9,7,4.81,182,2735,null,37.5539,-77.47474,3.3,9],
+ ["1656852893934458391","Spacious single-level with a fireplace",9,4,4.5,4,3032,2117,37.47799775448436,-77.43253982326235,5.7,14],
+ ["756547520899515842","Waterfront estate with pool, Moseley",10,10,4.65,17,3810,2815,37.43609,-77.68343,19.8,33],
+ ["556388631376639302","Waterfront estate, 100 acres, Moseley",12,9,4.91,32,4630,3230,37.4352,-77.68281,19.8,33],
+ ["741329525448578463","Waterfront estate, 13 bedrooms, Moseley",16,13,4.92,12,6575,4680,37.43427,-77.68155,19.8,33],
+ ["741339124127363443","3-home estate with pool, Moseley",22,19,5.0,6,8590,6195,37.43619,-77.68136,19.9,33]
+];
+function researchedLodging() {
+  return RESEARCHED.map(([id, name, beds, br, rating, rev, t3, t2, lat, lon, miles, mins]) => {
+    let nightly = t2 ? t3 - t2 : t3 / 3, fixed = t3 - 3 * nightly;
+    if (fixed < 0) { nightly = t3 / 3; fixed = 0; }
+    return { id: uid(), name, url: `https://www.airbnb.com/rooms/${id}?${AIRBNB_DATES}`, nightly: +nightly.toFixed(2), cleaning: +fixed.toFixed(2), service: 0, tax: 0,
+      sleeps: beds * 2, beds, br, rating, rev, miles, mins, lat, lon, src: "airbnb", srcId: "airbnb-" + id, checked: "2026-10-11", no2: !t2 };
+  });
+}
 function defaults() {
-  const L = [
-    { id: uid(), name: "Sample: 5-bedroom house, close to venue", url: "", nightly: 420, cleaning: 150, service: 180, tax: 12, sleeps: 10, miles: 1.2, mins: 6 },
-    { id: uid(), name: "Sample: 3-bedroom apartment, mid-distance", url: "", nightly: 260, cleaning: 100, service: 110, tax: 12, sleeps: 6, miles: 4.5, mins: 14 },
-    { id: uid(), name: "Sample: Budget bunk house, far out", url: "", nightly: 190, cleaning: 80, service: 90, tax: 12, sleeps: 8, miles: 11, mins: 25 }
-  ];
+  const L = researchedLodging();
   const T = [
     { id: uid(), type: "van", name: "Sample: 15-passenger vans", ...TDEF.van },
     { id: uid(), type: "bus", name: "Sample: Charter bus with driver", ...TDEF.bus },
@@ -105,6 +125,7 @@ function normalize(s) {
   s.grade = Object.assign({}, DEF_GRADE, s.grade);
   s.lsort = s.lsort || "grade"; s.lmin = s.lmin || ""; s.selRed = !!s.selRed;
   s.lodging.forEach(l => { if (l.miles === undefined) l.miles = null; if (l.mins === undefined) l.mins = null; });
+  if (s.lodging.length && s.lodging.every(l => /^Sample/.test(l.name) && !l.src)) { s.lodging = researchedLodging(); s.selL = s.lodging[0].id; } // swap the old sample stays for the researched ones
   s.transport.forEach(t => {
     if (t.type === "van" && t.extra === undefined) { t.extra = Math.max(0, (+t.days || 0) - (+s.trip.nights || 3) - 1); delete t.days; }
     if (t.type === "bus") { if (t.layover === undefined) t.layover = 0; if (t.driverHotel === undefined) t.driverHotel = 0; }

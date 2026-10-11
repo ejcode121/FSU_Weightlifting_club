@@ -94,7 +94,7 @@ function stayView(l) {
   const c = lodgingCost(l), n = baseNights(), people = Math.max(1, num(S.team.people)), g = lodgingGrade(l);
   const has = !(l.miles === null || l.miles === undefined || l.miles === "");
   return `<div class="stay-cost"><b class="disp">${usd(c.total)}</b><span>${n} nights, ${usd(c.total / people)} per person</span></div>
-    <div class="stay-chips"><span class="chip">${ico("bed")}${c.label}</span>${l.est ? `<span class="chip">Estimated price</span>` : ""}
+    <div class="stay-chips"><span class="chip">${ico("bed")}${c.label}${l.beds ? `, ${l.beds} beds` : ""}</span>${l.rating ? `<span class="chip">${l.rating} (${l.rev})</span>` : ""}${l.checked ? `<span class="chip">Checked ${new Date(l.checked + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>` : ""}${l.no2 ? `<span class="chip">No 2-night price</span>` : ""}${l.est ? `<span class="chip">Estimated price</span>` : ""}
       <span class="chip">${ico("pin")}${has ? `${num(l.miles)} mi to the venue` : "No distance"}</span>${l.mins ? `<span class="chip">${num(l.mins)} min drive</span>` : ""}</div>`;
 }
 function updateLodging() {

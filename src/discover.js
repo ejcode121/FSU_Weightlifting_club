@@ -78,12 +78,12 @@ function stayItems() {
   const disc = D.stays.filter(s => !have.has(s.id)).map(s => ({ k: "disc", id: s.id, name: s.name, lat: s.lat, lon: s.lon, ...xyMi(s.lat, s.lon), s }));
   return [...disc, ...trip].map(i => ({ ...i, dist: Math.hypot(i.dx, i.dy) }));
 }
-const mapBar = (zoomOn, Z) => `<div class="map-bar">${zoomOn ? `<div class="zoom" role="group" aria-label="Map zoom">${[3, 6, 12].map(z => `<button type="button" data-zoom="${z}" aria-pressed="${Z === z}">${z} mi</button>`).join("")}</div>` : "<span></span>"}
+const mapBar = (zoomOn, Z) => `<div class="map-bar">${zoomOn ? `<div class="zoom" role="group" aria-label="Map zoom">${[3, 6, 12, 24].map(z => `<button type="button" data-zoom="${z}" aria-pressed="${Z === z}">${z} mi</button>`).join("")}</div>` : "<span></span>"}
   <span class="map-bar-r"><span class="stamp">${statusText()}</span><button class="icon-btn sm" type="button" data-refresh aria-label="Refresh map data" ${dBusy ? "disabled" : ""}>${ico("reset")}</button></span></div>`;
 function renderStayMap() {
   const el = $("#stayMap"); if (!el) return;
   const items = stayItems(), tripMax = Math.max(0, ...items.filter(i => i.k === "trip").map(i => i.dist));
-  const Z = zoom || [3, 6, 12].find(z => z >= tripMax) || 12, s = 205 / Z;
+  const Z = zoom || [3, 6, 12, 24].find(z => z >= tripMax) || 24, s = 205 / Z;
   const shown = items.filter(i => i.dist <= Z).sort((a, b) => (a.k === "trip") - (b.k === "trip"));
   const rings = [1 / 3, 2 / 3, 1].map(f => Z * f);
   const pins = shown.map(i => { const x = (320 + i.dx * s).toFixed(1), y = (220 - i.dy * s).toFixed(1);
