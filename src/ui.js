@@ -38,21 +38,17 @@ function progressHTML(raised, g) {
     <div class="prog-scale"><span>$0</span><span>Goal ${usd(g)}</span></div>`;
 }
 function heroHTML(mode) {
-  const g = goal(), raised = plannedTotal(), gap = raised - g, nd = neededPerMonth(), p = num(S.team.people), mo = Math.max(1, num(S.team.months));
-  const title = mode === "trip" ? "Get the team to Richmond" : "Here's what your shifts raise";
-  const sub = mode === "trip"
-    ? `${p} lifters raising ${usd(g)} before the Apr 15 to 18 meet. That's ${usd(nd, 2)} each, every month for ${mo} months.`
-    : raised === 0 ? `Add shifts and watch the bar fill. Each lifter needs about ${usd(nd, 2)} a month.`
-    : gap >= 0 ? `This plan raises ${usd(raised)}, ${usd(gap)} past the goal.` : `${usd(-gap)} short. A shift or two more each month would close it.`;
+  const g = goal(), raised = plannedTotal(), gap = raised - g;
+  const title = "Fundraising";
   const cls = raised === 0 ? "" : gap >= 0 ? "ok" : "warn";
-  return `<h1 class="hero-title">${title}</h1><p class="hero-sub">${sub}</p>
+  return `<h1 class="hero-title">${title}</h1>
     <div class="bar-fig">${progressHTML(raised, g)}</div>
     <dl class="readout">
       <div><dt><i></i>Raised</dt><dd>${usd(raised)}</dd></div>
       <div><dt><i class="ghost"></i>Goal</dt><dd>${usd(g)}</dd></div>
       <div><dt><i class="${gap >= 0 && raised ? "ok" : "gap"}"></i>${gap >= 0 && raised ? "Cushion" : "Still to raise"}</dt><dd class="${cls}">${usd(Math.abs(raised ? gap : g))}</dd></div>
     </dl>
-    ${raised === 0 ? `<div class="hero-cta"><button class="btn pri" type="button" data-act="suggest">${ico("spark")}Suggest a plan</button><button class="btn" type="button" data-act="goto-jobs">${ico("search")}Find shifts</button><p>No shifts in the plan yet, so the bar is empty.</p></div>` : ""}`;
+    ${raised === 0 ? `<div class="hero-cta"><button class="btn pri" type="button" data-act="suggest">${ico("spark")}Suggest a plan</button><button class="btn" type="button" data-act="goto-jobs">${ico("search")}Find shifts</button></div>` : ""}`;
 }
 function renderHeroes() {
   const g = goal(), raised = plannedTotal(), gap = raised - g;
@@ -84,9 +80,9 @@ function renderTimeline() {
   for (let o = -(n - 1); o <= 0; o++) {
     const first = o === -(n - 1), meet = o === 0;
     const b = meet && first ? "Arrive and compete" : meet ? "Compete" : first ? "Arrive" : o === -1 ? "Rest day" : "Settle in";
-    h += `<li class="${meet ? "meet" : ""}"><b>${b}</b><span>${f(o) || (meet ? "Meet day" : o === -1 ? "Day before" : `${-o} days before`)}</span></li>`;
+    h += `<li class="${meet ? "meet" : ""}"><b>${b}</b><span>${f(o) || ""}</span></li>`;
   }
-  h += `<li class="last"><b>Head home</b><span>${f(1) || "After the meet"}</span><span>${hasRed({ redeye: true }) ? "Next morning by van, or a red-eye that night by bus or flight" : "Next morning"}</span></li>`;
+  h += `<li class="last"><b>Head home</b><span>${f(1) || ""}</span></li>`;
   $("#timeline").innerHTML = h;
   $("#timeline").style.gridAutoColumns = `minmax(0,1fr)`;
 }
@@ -97,10 +93,9 @@ const stayRing = g => {
 function stayView(l) {
   const c = lodgingCost(l), n = baseNights(), people = Math.max(1, num(S.team.people)), g = lodgingGrade(l);
   const has = !(l.miles === null || l.miles === undefined || l.miles === "");
-  return `<div class="stay-cost"><b class="disp">${usd(c.total)}</b><span>for ${n} nights, ${usd(c.total / people)} per person</span></div>
-    <div class="stay-chips"><span class="chip">${ico("bed")}${c.label} for ${people}</span>
-      <span class="chip">${ico("pin")}${has ? `${num(l.miles)} mi to the venue` : "Add the distance to grade it"}</span>${l.mins ? `<span class="chip">${num(l.mins)} min drive</span>` : ""}</div>
-    <p class="hint">${g ? `Grade ${g.letter}, score ${g.score} of 100. Distance ${g.d}, price ${g.c} (${usd(g.pp)} per person per night).` : "Enter the miles to the venue and this stay gets a grade."}</p>`;
+  return `<div class="stay-cost"><b class="disp">${usd(c.total)}</b><span>${n} nights, ${usd(c.total / people)} per person</span></div>
+    <div class="stay-chips"><span class="chip">${ico("bed")}${c.label}</span>
+      <span class="chip">${ico("pin")}${has ? `${num(l.miles)} mi to the venue` : "No distance"}</span>${l.mins ? `<span class="chip">${num(l.mins)} min drive</span>` : ""}</div>`;
 }
 function updateLodging() {
   S.lodging.forEach(l => {
@@ -137,7 +132,7 @@ function renderLodging() {
           <label class="field">Listing link<input type="url" data-k="url" value="${esc(l.url)}" placeholder="https://airbnb.com/rooms/…"></label>
         </div></div>
       </details>
-    </article>`).join("") || `<div class="empty"><b>No Airbnbs to show</b>Add a listing or loosen the grade filter.</div>`;
+    </article>`).join("") || `<div class="empty"><b>No Airbnbs</b></div>`;
   updateLodging();
 }
 function rideView(t) {
@@ -159,22 +154,17 @@ function renderTransport() {
         <button class="icon-btn" type="button" data-del aria-label="Delete ${esc(t.name)}">${ico("x")}</button>
       </div>
       <div class="ride-cost" data-view></div>
-      <label class="switch-row"><input type="checkbox" class="switch" data-k="redeye" ${t.redeye ? "checked" : ""}><span>Allow a red-eye home<small>Leave the night of the meet, one fewer night</small></span></label>
+      <label class="switch-row"><input type="checkbox" class="switch" data-k="redeye" ${t.redeye ? "checked" : ""}><span>Red-eye allowed</span></label>
       <div style="padding:0 16px 14px"><label class="use"><input class="sr" type="radio" name="selT" data-pick ${t.id === S.selT ? "checked" : ""}><span class="pill">${ico("check")}Use this ride</span></label></div>
       <details class="dis" data-open="${t.id}" ${openCards.has(t.id) ? "open" : ""}>
         <summary>Prices and details${ico("chev")}</summary>
-        <div class="dis-body"><div class="grid">${TFIELDS[t.type].map(([k, lab]) => numField(k, lab, t[k])).join("")}</div>
-          ${THINTS[t.type] ? `<p class="hint">${esc(THINTS[t.type])}</p>` : ""}</div>
+        <div class="dis-body"><div class="grid">${TFIELDS[t.type].map(([k, lab]) => numField(k, lab, t[k])).join("")}</div></div>
       </details>
     </article>`;
-  }).join("") || `<div class="empty"><b>No transportation yet</b>Add a van, a bus, or flights.</div>`;
+  }).join("") || `<div class="empty"><b>No transportation</b></div>`;
   updateTransport();
 }
-function updateLines() {
-  const n = baseNights();
-  $("#schedLine").textContent = scheduleText();
-  $("#extrasLine").textContent = `Per-person extras (entry fee and food for ${daysFor(n)} days) plus other team costs come to ${usd(extras(n))} at ${n} nights. A red-eye version drops one night of lodging and food.`;
-}
+function updateLines() {}
 function allCombos() {
   const out = [];
   S.lodging.forEach(l => S.transport.forEach(t => variants(t).forEach(v => out.push({ l, t, n: v.n, red: v.red, c: comboCost(l, t, v.n), g: lodgingGrade(l) }))));
@@ -198,7 +188,7 @@ function renderPicks() {
 }
 function renderMatrix() {
   const L = visibleLodging();
-  if (!L.length || !S.transport.length) { $("#matrix").innerHTML = `<div class="empty"><b>Nothing to compare yet</b>Add at least one Airbnb and one way to get there.</div>`; return; }
+  if (!L.length || !S.transport.length) { $("#matrix").innerHTML = `<div class="empty"><b>Nothing to compare</b></div>`; return; }
   const g = goal(), people = Math.max(1, num(S.team.people));
   const cols = S.transport.flatMap(variants);
   let best = Infinity; L.forEach(l => cols.forEach(v => { best = Math.min(best, comboCost(l, v.t, v.n)); }));
@@ -248,27 +238,25 @@ function searchLinks(j) {
     <a href="https://fsu.joinhandshake.com/stu/postings?query=${q}" target="_blank" rel="noopener">Handshake</a>
     <a href="https://tallahassee.craigslist.org/search/ggg?query=${q}" target="_blank" rel="noopener">Craigslist gigs</a>`;
 }
-const stepper = n => `<div class="stepper"><button type="button" data-step="-1" aria-label="Fewer shifts">${ico("minus")}</button><output><b>${n}</b><small>a month</small></output><button type="button" data-step="1" aria-label="More shifts">${ico("plus")}</button></div>`;
+const stepper = n => `<div class="stepper"><button type="button" data-step="-1" aria-label="Fewer shifts">${ico("minus")}</button><output><b>${n}</b><small>/ month</small></output><button type="button" data-step="1" aria-label="More shifts">${ico("plus")}</button></div>`;
 function renderJobs() {
   const list = S.jobs.filter(jobMatches).sort((a, b) =>
     F.sort === "hourly" ? hourly(b) - hourly(a) : F.sort === "short" ? num(a.hours) - num(b.hours) : earn(b) - earn(a));
-  $("#resCount").textContent = `${list.length} of ${S.jobs.length} jobs shown. Monthly target: ${usd(target())} per lifter.`;
-  if (!list.length) { $("#jobList").innerHTML = `<div class="empty"><b>No jobs match</b>Clear a filter, or add your own job.<br><button class="btn" type="button" id="clearF">Clear filters</button></div>`; return; }
+  $("#resCount").textContent = `${list.length} of ${S.jobs.length} jobs`;
+  if (!list.length) { $("#jobList").innerHTML = `<div class="empty"><b>No jobs</b><button class="btn" type="button" id="clearF">Clear filters</button></div>`; return; }
   $("#jobList").innerHTML = list.map(j => {
     const e = earn(j), n = S.plan[j.id] || 0, need = e > 0 ? Math.ceil(target() / e) : 0, pips = Math.min(need, 8);
     return `<article class="job ${n ? "inplan" : ""}" data-id="${j.id}">
       <div class="job-top"><span class="cat-ico">${ico(CAT_ICO[j.cat] || "plan")}</span>
         <div><h3>${esc(j.title)}</h3><div class="cn">${esc(j.cat)}</div></div>
         <div class="job-pay"><b>${usd(e)}</b><small>per shift</small></div></div>
-      <p class="desc">${esc(j.desc)}</p>
-      <p class="brk">${j.group ? `${usd(j.payout)} split among ${j.crew} people` : `${usd(j.rate)} an hour for ${j.hours} hours${j.tips ? `, plus about ${usd(j.tips)} in tips` : ""}`}</p>
+      <p class="brk">${j.group ? `${usd(j.payout)} ÷ ${j.crew}` : `${usd(j.rate)}/hr × ${j.hours}h${j.tips ? ` + ${usd(j.tips)} tips` : ""}`}</p>
       <div class="facts">${j.group ? `<span class="tag">Team effort</span>` : ""}${n ? `<span class="tag in">In your plan</span>` : ""}
         <span class="chip">${ico("pin")}${AREA[j.area]}</span>${j.when.map(w => `<span class="chip">${WHEN[w]}</span>`).join("")}<span class="chip">${seasonText(j)}</span></div>
-      <p class="where"><b>Where to look:</b> ${esc(j.how)}</p>
       <div class="links">${searchLinks(j)}<button type="button" class="btn ghost sm" data-edit style="min-height:32px;padding:2px 0">${ico("edit")}Edit</button></div>
       <div class="job-foot">
         <div class="need"><div class="pips" aria-hidden="true">${Array.from({ length: pips }, (_, i) => `<i class="pip ${i < n ? "on" : ""}"></i>`).join("")}</div>
-          <span>${need ? `${need} shift${need > 1 ? "s" : ""} a month reach${need > 1 ? "" : "es"} ${usd(target())}` : "No pay set"}</span></div>
+          <span>${need ? `${need} a month to reach ${usd(target())}` : "No pay set"}</span></div>
         ${stepper(n)}
       </div></article>`;
   }).join("");
@@ -279,11 +267,11 @@ function renderPlanList() {
   const pj = planJobs();
   $("#planList").innerHTML = pj.length ? pj.map(j => `
     <div class="shift-row" data-id="${j.id}">
-      <div><b>${esc(j.title)}</b><small>${usd(earn(j))} per shift, ${seasonText(j).toLowerCase()}</small></div>
+      <div><b>${esc(j.title)}</b><small>${usd(earn(j))} per shift</small></div>
       <div class="sub">${usd(S.plan[j.id] * earn(j))}</div>
       <div style="grid-column:1/-1">${stepper(S.plan[j.id])}</div>
     </div>`).join("")
-    : `<div class="empty"><b>No shifts in the plan</b>Pick shifts yourself or let the planner suggest a mix.<br><button class="btn pri" type="button" data-act="suggest">${ico("spark")}Suggest a plan</button> <button class="btn" type="button" data-act="goto-jobs">${ico("search")}Find shifts</button></div>`;
+    : `<div class="empty"><b>No shifts</b><button class="btn pri" type="button" data-act="suggest">${ico("spark")}Suggest a plan</button> <button class="btn" type="button" data-act="goto-jobs">${ico("search")}Find shifts</button></div>`;
 }
 function startDate() {
   const [y, m] = (S.team.start || "").split("-").map(Number);
@@ -314,16 +302,7 @@ function renderCum() {
     ${grid}<line class="axis" x1="${L}" x2="${W - R}" y1="${Y(0)}" y2="${Y(0)}"/>
     <line class="goal-l" x1="${L}" x2="${W - R}" y1="${Y(g)}" y2="${Y(g)}"/><text x="${L + 6}" y="${Y(g) - 7}" class="lbl-strong">Goal ${usd(g)}</text>
     <path class="area" d="${area}"/><path class="line" d="${path}"/>${mark(EARLY.date, "Early-bird entry closes", 14)}${mark(meetD, "Meet", 0)}${xl}</svg>`;
-  const notes = [];
-  if (EARLY.date > t0 && EARLY.date < t1) {
-    const by = cumAt(EARLY.date), cost = p * EARLY.fee, okE = by >= cost;
-    notes.push(`<li><i class="${okE ? "ok" : "bad"}"></i><span>By Mar 4 this plan has raised ${usd(by)}. Early-bird entries for ${p} lifters cost ${usd(cost)} and save ${usd(p * 30)} over the regular fee.</span></li>`);
-  }
-  const hit = pts.findIndex(([, v]) => g > 0 && v >= g);
-  notes.push(total === 0 ? `<li><i></i><span>Add shifts to see when the plan reaches the goal.</span></li>`
-    : hit > 0 ? `<li><i class="ok"></i><span>The plan reaches the goal by the end of ${ms[hit - 1].label}.</span></li>`
-    : `<li><i class="bad"></i><span>The plan doesn't reach the goal in this window.</span></li>`);
-  $("#cumChart").innerHTML = svg + `<ul class="notes">${notes.join("")}</ul>`;
+  $("#cumChart").innerHTML = svg;
 }
 function renderMonthChart() {
   const ms = monthsList(), t = target(), W = 640, H = 260, L = 12, R = 12, T = 30, B = 30, ph = H - T - B;
@@ -340,16 +319,15 @@ function renderMonthChart() {
 function renderResult() {
   const ms = monthsList(), g = goal(), raised = plannedTotal(), per = ms.reduce((s, m) => s + monthEarn(m.cal), 0), gap = raised - g, nd = neededPerMonth(), p = Math.max(1, num(S.team.people));
   const cls = raised === 0 ? "" : gap >= 0 ? "ok" : "bad";
-  $("#result").innerHTML = `<div class="verdict ${cls}"><b>${raised === 0 ? "No shifts yet" : gap >= 0 ? (gap > 0 ? `Covered, with ${usd(gap)} to spare` : "Covered, right on the goal") : `${usd(-gap)} short`}</b>
-    ${raised === 0 ? "Add shifts from Find work, or let the planner suggest a mix."
-    : `Each lifter raises ${usd(per)} over ${ms.length} months, about ${usd(per / ms.length, 2)} a month. You need ${usd(nd, 2)}.${gap < 0 ? ` Closing the gap takes about ${usd(-gap / p / ms.length, 2)} more per lifter each month, or a cheaper stay and ride.` : ""}`}</div>`;
+  $("#result").innerHTML = `<div class="verdict ${cls}"><b>${raised === 0 ? "No shifts" : gap >= 0 ? `Covered, ${usd(gap)} to spare` : `${usd(-gap)} short`}</b>
+    ${raised === 0 ? "" : `${usd(per)} per lifter, ${usd(per / ms.length, 2)} a month`}</div>`;
 }
 function renderPlan() { renderPlanList(); renderResult(); renderCum(); renderMonthChart(); }
 
 function suggestPlan() {
   const ms = monthsList(), nd = neededPerMonth() * 1.05;
   const ok = S.jobs.filter(j => !j.group && earn(j) > 0 && ms.every(m => inSeason(j, m.cal)));
-  if (!ok.length || nd <= 0) { toast("No year-round jobs to suggest from. Add one in Find work."); return; }
+  if (!ok.length || nd <= 0) { toast("No jobs to suggest."); return; }
   const plan = {}; let rem = nd, count = 0;
   while (rem > 0 && count < 4) {
     const fits = ok.filter(j => earn(j) >= rem).sort((a, b) => earn(a) - earn(b) || hourly(b) - hourly(a))[0];
@@ -358,7 +336,7 @@ function suggestPlan() {
   }
   S.plan = plan; save(); renderJobs(); renderPlan(); renderHeroes(); renderSetupFacts();
   const names = Object.keys(plan).map(id => S.jobs.find(j => j.id === id).title);
-  toast(`Plan set: ${count} shift${count > 1 ? "s" : ""} a month. ${names.join(" and ")}.`);
+  toast(`Plan set: ${names.join(", ")}`);
 }
 
 /* ---------------- orchestration ---------------- */
@@ -533,7 +511,7 @@ function summaryText() {
     `Each lifter raises ${usd(per)}. The team raises ${usd(plannedTotal())} against a ${usd(g)} goal.`].join("\n");
 }
 $("#copyBtn").onclick = async () => {
-  try { await navigator.clipboard.writeText(summaryText()); $("#copyMsg").textContent = "Copied. Paste it into your group chat."; toast("Summary copied."); }
+  try { await navigator.clipboard.writeText(summaryText()); toast("Summary copied."); }
   catch (e) { prompt("Copy this summary:", summaryText()); }
 };
 $("#printBtn").onclick = () => window.print();
@@ -547,8 +525,8 @@ $("#importFile").onchange = async e => {
   try {
     const d = JSON.parse(await e.target.files[0].text());
     if (!d.team || !d.jobs || !d.lodging || !d.transport) throw 0;
-    S = normalize(d); save(); heroFirst = true; renderAll(); $("#copyMsg").textContent = "Backup loaded."; toast("Backup loaded.");
-  } catch (err) { toast("That file isn't a planner backup. Pick the file you saved with Save backup file."); }
+    S = normalize(d); save(); heroFirst = true; renderAll(); toast("Backup loaded.");
+  } catch (err) { toast("Not a planner backup."); }
   e.target.value = "";
 };
 $("#resetBtn").onclick = () => { if (confirm("Reset everything back to the starting sample data? This can't be undone.")) { S = defaults(); save(); heroFirst = true; openCards.clear(); renderAll(); toast("Back to the starting data."); } };

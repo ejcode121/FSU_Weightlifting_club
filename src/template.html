@@ -88,66 +88,59 @@
     <div class="hero" id="heroTrip"></div>
 
     <details class="setup" id="setup">
-      <summary><span id="setupFacts" style="display:contents"></span><span class="edit">Change team and goal <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-chev"/></svg></span></summary>
+      <summary><span id="setupFacts" style="display:contents"></span><span class="edit">Edit <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-chev"/></svg></span></summary>
       <div class="setup-body">
         <div class="grid">
           <label class="field">Lifters<input type="number" min="1" inputmode="numeric" data-team="people"></label>
-          <label class="field">Months to fundraise<input type="number" min="1" max="24" inputmode="numeric" data-team="months"></label>
-          <label class="field">First fundraising month<input type="month" data-team="start"></label>
-          <label class="field">Monthly target per lifter ($)<input type="number" min="0" step="5" inputmode="decimal" data-team="target"></label>
+          <label class="field">Months<input type="number" min="1" max="24" inputmode="numeric" data-team="months"></label>
+          <label class="field">Start month<input type="month" data-team="start"></label>
+          <label class="field">Monthly target ($)<input type="number" min="0" step="5" inputmode="decimal" data-team="target"></label>
         </div>
         <div class="row">
           <label class="row" style="gap:8px"><input type="radio" name="gm" value="fixed" data-gm> Fixed goal</label>
           <input class="input" type="number" min="0" step="100" inputmode="decimal" data-team="goal" aria-label="Fixed goal in dollars" style="max-width:150px">
-          <label class="row" style="gap:8px;margin-left:8px"><input type="radio" name="gm" value="trip" data-gm> Use the selected trip's total cost as the goal</label>
+          <label class="row" style="gap:8px;margin-left:8px"><input type="radio" name="gm" value="trip" data-gm> Goal = trip total</label>
         </div>
-        <p class="hint">The meet is Apr 15 to 18, 2027, so Nov 2026 through Apr 2027 is 6 months. The plan assumes you work shifts through the last month, and April ends when you leave.</p>
       </div>
     </details>
 
     <section class="block first" aria-labelledby="h-trip">
       <div class="sec-head"><div>
-        <h2 class="sec-title" id="h-trip">The trip</h2>
-        <p class="sec-note">Arrive two days before your lifters compete, take a rest day, then compete. Pick the competition day to see your dates.</p>
+        <h2 class="sec-title" id="h-trip">Trip</h2>
       </div></div>
       <div class="grid">
         <label class="field">Destination<input type="text" data-trip="dest" placeholder="Meet, city, state"></label>
-        <label class="field">Nights (stay-over version)<input type="number" min="1" inputmode="numeric" data-trip="nights"></label>
-        <label class="field">Day your lifters compete<input type="date" data-trip="meetDay" min="2027-04-15" max="2027-04-18"></label>
-        <label class="field">Entry fee per lifter ($)<input type="number" min="0" inputmode="decimal" data-trip="reg"></label>
-        <label class="field">Food per person per day ($)<input type="number" min="0" inputmode="decimal" data-trip="food"></label>
-        <label class="field">Other team costs, total ($)<input type="number" min="0" inputmode="decimal" data-trip="misc"></label>
+        <label class="field">Nights<input type="number" min="1" inputmode="numeric" data-trip="nights"></label>
+        <label class="field">Meet day<input type="date" data-trip="meetDay" min="2027-04-15" max="2027-04-18"></label>
+        <label class="field">Entry fee ($)<input type="number" min="0" inputmode="decimal" data-trip="reg"></label>
+        <label class="field">Food per day ($)<input type="number" min="0" inputmode="decimal" data-trip="food"></label>
+        <label class="field">Other costs ($)<input type="number" min="0" inputmode="decimal" data-trip="misc"></label>
       </div>
-      <p class="hint" style="margin-top:12px">USAW entry fees per lifter, from its August 2026 announcement: $145 early bird through Mar 4, 2027, $175 regular through Mar 18, and $375 late through Apr 1 (2:00 p.m. MT). Registration opens Jan 1, 2027. Paying early saves $30 each, $540 for 18. The default is the $175 regular fee. USAW membership is not included.</p>
       <ol class="tl" id="timeline" aria-label="Trip schedule" style="margin-top:22px"></ol>
-      <p class="hint tl-note" id="schedLine"></p>
-      <p class="hint" id="extrasLine" style="margin-top:8px"></p>
     </section>
 
     <section class="block" aria-labelledby="h-stay">
       <div class="sec-head">
         <div>
-          <h2 class="sec-title" id="h-stay">Airbnbs near the venue</h2>
-          <p class="sec-note">The venue is the Greater Richmond Convention Center. Enter each listing's price breakdown and its distance (check it in Maps). Every stay gets a grade from A to D for distance and cost per person. We work out how many places 18 people need.</p>
+          <h2 class="sec-title" id="h-stay">Airbnbs</h2>
         </div>
         <button class="btn pri" id="addL" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Add Airbnb</button>
       </div>
       <details class="dis">
-        <summary>How grades work<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-chev"/></svg></summary>
+        <summary>Grade settings<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-chev"/></svg></summary>
         <div class="dis-body">
           <div class="grid">
-            <label class="field">Distance counts for (% of the grade)<input type="number" min="0" max="100" inputmode="decimal" data-gset="wDist"></label>
-            <label class="field">Walkable up to (miles)<input type="number" min="0" step="any" inputmode="decimal" data-gset="near"></label>
-            <label class="field">Too far from (miles)<input type="number" min="0" step="any" inputmode="decimal" data-gset="far"></label>
-            <label class="field">Great price up to ($ per person per night)<input type="number" min="0" step="any" inputmode="decimal" data-gset="cheap"></label>
-            <label class="field">Too pricey from ($ per person per night)<input type="number" min="0" step="any" inputmode="decimal" data-gset="pricey"></label>
+            <label class="field">Distance weight (%)<input type="number" min="0" max="100" inputmode="decimal" data-gset="wDist"></label>
+            <label class="field">Best distance (mi)<input type="number" min="0" step="any" inputmode="decimal" data-gset="near"></label>
+            <label class="field">Worst distance (mi)<input type="number" min="0" step="any" inputmode="decimal" data-gset="far"></label>
+            <label class="field">Best price ($/person/night)<input type="number" min="0" step="any" inputmode="decimal" data-gset="cheap"></label>
+            <label class="field">Worst price ($/person/night)<input type="number" min="0" step="any" inputmode="decimal" data-gset="pricey"></label>
           </div>
-          <p class="hint">Price makes up the rest of the grade. A score of 75 or more is an A, 55 or more a B, 35 or more a C, and anything lower a D. A listing with no distance can't be graded.</p>
         </div>
       </details>
       <div class="toolbar">
-        <label class="field">Sort by<select id="lSort"><option value="grade">Best grade first</option><option value="cost">Lowest total cost first</option><option value="dist">Closest to the venue first</option></select></label>
-        <label class="field">Show<select id="lMin"><option value="">All listings</option><option value="C">Grade C or better</option><option value="B">Grade B or better</option><option value="A">Grade A only</option></select></label>
+        <label class="field">Sort by<select id="lSort"><option value="grade">Best grade</option><option value="cost">Lowest cost</option><option value="dist">Closest</option></select></label>
+        <label class="field">Show<select id="lMin"><option value="">All listings</option><option value="C">C or better</option><option value="B">B or better</option><option value="A">A only</option></select></label>
       </div>
       <div class="cards two" id="lodgingList"></div>
     </section>
@@ -155,8 +148,7 @@
     <section class="block" aria-labelledby="h-ride">
       <div class="sec-head">
         <div>
-          <h2 class="sec-title" id="h-ride">Getting there</h2>
-          <p class="sec-note">Rental vans, a charter bus, or flights. A red-eye home, leaving the night of the meet, needs a professional driver or a flight, so vans stay the extra night.</p>
+          <h2 class="sec-title" id="h-ride">Transportation</h2>
         </div>
         <button class="btn pri" id="addT" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Add transportation</button>
       </div>
@@ -165,8 +157,7 @@
 
     <section class="block" aria-labelledby="h-mx">
       <div class="sec-head"><div>
-        <h2 class="sec-title" id="h-mx">Every combination</h2>
-        <p class="sec-note">Team totals with the cost per person, compared with your goal. Charter bus and flights appear twice: the full stay-over and a red-eye with one fewer night. For a red-eye, ask the host about late check-out on meet day. Tap a combination to use it.</p>
+        <h2 class="sec-title" id="h-mx">Combinations</h2>
       </div></div>
       <div class="picks" id="picks"></div>
       <div class="mx-wrap" id="matrix"></div>
@@ -180,21 +171,20 @@
     <section class="block first" aria-labelledby="h-jobs" style="padding-top:24px">
       <div class="sec-head">
         <div>
-          <h2 class="sec-title" id="h-jobs">Find shifts</h2>
-          <p class="sec-note">Pay rates are estimates for Tallahassee. Tap Edit on a card to enter the real number once you find an opening, and use the search links to see live listings near FSU.</p>
+          <h2 class="sec-title" id="h-jobs">Jobs</h2>
         </div>
         <button class="btn pri" id="addJob" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Add a job</button>
       </div>
       <div class="finder">
-        <div class="search"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-search"/></svg><input class="input" type="search" id="q" placeholder="Search moving, tutoring, events, weekends, campus" aria-label="Search jobs"></div>
+        <div class="search"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-search"/></svg><input class="input" type="search" id="q" placeholder="Search jobs" aria-label="Search jobs"></div>
         <div class="chips" id="catChips" role="group" aria-label="Job categories"></div>
         <div class="filter-row">
-          <label class="field">Area<select id="fArea"><option value="">Anywhere near FSU</option><option value="campus">On campus or walkable</option><option value="near">Within about 3 miles</option><option value="city">Around Tallahassee</option></select></label>
+          <label class="field">Area<select id="fArea"><option value="">Anywhere</option><option value="campus">On campus</option><option value="near">Within 3 mi</option><option value="city">Tallahassee</option></select></label>
           <label class="field">When<select id="fWhen"><option value="">Any time</option><option value="weekday">Weekdays</option><option value="evening">Evenings</option><option value="weekend">Weekends</option></select></label>
-          <label class="field">In season during<select id="fMonth"></select></label>
+          <label class="field">Month<select id="fMonth"></select></label>
           <label class="field">Sort by<select id="fSort"><option value="earn">Most per shift</option><option value="hourly">Highest hourly</option><option value="short">Shortest shift</option></select></label>
         </div>
-        <label class="switch-row"><input type="checkbox" class="switch" id="fFew"><span>Only jobs that reach my monthly target in 2 shifts or fewer</span></label>
+        <label class="switch-row"><input type="checkbox" class="switch" id="fFew"><span>2 shifts or fewer reach target</span></label>
         <p class="hint" id="resCount" role="status"></p>
       </div>
       <div class="jobs" id="jobList"></div>
@@ -210,38 +200,34 @@
       <div>
         <section class="block first" aria-labelledby="h-shifts">
           <div class="sec-head"><div>
-            <h2 class="sec-title" id="h-shifts">Each lifter's monthly shifts</h2>
-            <p class="sec-note">This is what one lifter does every month. Add shifts from Find work or change the counts here.</p>
+            <h2 class="sec-title" id="h-shifts">Monthly shifts per lifter</h2>
           </div>
           <button class="btn" id="suggestBtn" type="button" data-act="suggest"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-spark"/></svg>Suggest a plan</button></div>
           <div id="planList"></div>
         </section>
         <section class="block" aria-labelledby="h-verdict">
-          <div class="sec-head"><div><h2 class="sec-title" id="h-verdict">Does it cover the goal?</h2></div></div>
+          <div class="sec-head"><div><h2 class="sec-title" id="h-verdict">Result</h2></div></div>
           <div id="result"></div>
           <div class="actions">
-            <button class="btn pri" id="copyBtn" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-copy"/></svg>Copy summary for the group chat</button>
+            <button class="btn pri" id="copyBtn" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-copy"/></svg>Copy summary</button>
             <button class="btn" id="printBtn" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-print"/></svg>Print plan</button>
-            <button class="btn" id="exportBtn" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-save"/></svg>Save backup file</button>
-            <button class="btn" id="importBtn" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-load"/></svg>Load backup file</button>
+            <button class="btn" id="exportBtn" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-save"/></svg>Save backup</button>
+            <button class="btn" id="importBtn" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-load"/></svg>Load backup</button>
             <button class="btn danger" id="resetBtn" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-reset"/></svg>Reset everything</button>
             <input type="file" id="importFile" accept="application/json" hidden>
           </div>
-          <p class="hint" id="copyMsg" role="status" style="margin-top:10px"></p>
         </section>
       </div>
       <div>
         <section class="block first" aria-labelledby="h-cum">
           <div class="sec-head"><div>
-            <h2 class="sec-title" id="h-cum">How the money builds</h2>
-            <p class="sec-note">Team total over time, assuming shifts spread evenly through each month.</p>
+            <h2 class="sec-title" id="h-cum">Team total</h2>
           </div></div>
           <div id="cumChart"></div>
         </section>
         <section class="block" aria-labelledby="h-mon">
           <div class="sec-head"><div>
-            <h2 class="sec-title" id="h-mon">Month by month, per lifter</h2>
-            <p class="sec-note">Seasonal jobs only count in the months they are in season. The gold line is your monthly target.</p>
+            <h2 class="sec-title" id="h-mon">Per lifter by month</h2>
           </div></div>
           <div id="monthChart"></div>
         </section>
@@ -250,9 +236,7 @@
   </div>
 </section>
 
-<div class="wrap"><footer>
-  <p>Everything saves in this browser automatically. Use Save backup file to share your setup with teammates, who load it with Load backup file. Job pay figures are rough estimates, not offers, and earnings are shown before taxes and gas. Before collecting money as a team, check with FSU Campus Recreation and Club Sports about how fundraising must be handled.</p>
-</footer></div>
+
 </main>
 
 <dialog id="jobDlg" aria-label="Job details"><form method="dialog" id="jobForm"></form></dialog>
