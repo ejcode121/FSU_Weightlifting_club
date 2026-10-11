@@ -366,3 +366,45 @@ dialog h2{font-stretch:66%;font-weight:800;font-size:2.1rem;line-height:.95;marg
 .live-pick b{font-stretch:76%;font-weight:760;font-size:1.1rem;line-height:1.1}
 .live-pick-links{display:flex;flex-wrap:wrap;gap:2px 12px}
 .live-pick-links a{font-size:.84rem;font-weight:600;color:var(--accent-text);text-underline-offset:3px;padding:4px 0}
+
+/* maps */
+.map-wrap{border:1px solid var(--line-2);border-radius:20px;background:var(--surface);margin:14px 0 18px;overflow:hidden}
+.map-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px 0}
+.map-bar-r{display:flex;align-items:center;gap:8px}
+.icon-btn.sm{width:34px;height:34px}.icon-btn.sm svg{width:16px;height:16px}
+.zoom{display:inline-flex;border:1px solid var(--line-2);border-radius:999px;overflow:hidden}
+.zoom button{border:0;background:none;padding:7px 14px;font-weight:600;font-size:.84rem;min-height:36px}
+.zoom button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+svg.map{width:100%;height:auto;max-height:520px}
+.map .ring-l{fill:none;stroke:var(--line-2);stroke-width:1;stroke-dasharray:3 5}
+.map .ring-t{fill:var(--ink-3);font-size:11px}
+.map .venue polygon{fill:var(--accent);stroke:var(--bg);stroke-width:2}
+.map .venue-t{fill:var(--ink);font-size:13px;font-weight:700}
+.map .route-l{fill:none;stroke:var(--accent);stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
+.map .leader{stroke:var(--ink-3);stroke-width:1.2;stroke-dasharray:2 3}
+.map .pin{cursor:pointer;outline:none}
+.map .pin .hit{fill:transparent}
+.map .pin text{text-anchor:middle;dominant-baseline:central;font-stretch:62%;font-weight:800;font-size:17px;fill:#fff;pointer-events:none}
+.map .pin.gC text{fill:#2A2108}
+.map .pin.trip .dot{fill:var(--g);stroke:var(--bg);stroke-width:2.5}
+.map .pin.trip.sel .dot{stroke:var(--ink);stroke-width:3.5}
+.map .pin.disc .dot{fill:var(--surface);stroke:var(--ink-3);stroke-width:2.2}
+.map .pin.rt .dot{fill:var(--accent);stroke:var(--bg);stroke-width:2.5}
+.map .pin:hover .dot,.map .pin:focus-visible .dot{stroke:var(--accent-text);stroke-width:3.5}
+.map-legend{display:flex;flex-wrap:wrap;gap:6px 16px;padding:0 14px 12px;font-size:.84rem;color:var(--ink-2)}
+.map-legend span{display:inline-flex;align-items:center;gap:7px}
+.lg{width:12px;height:12px;border-radius:50%;display:inline-block}
+.lg.trip{background:var(--p-green)}.lg.disc{border:2px solid var(--ink-3)}.lg.ven{background:var(--accent);border-radius:3px;transform:rotate(45deg) scale(.85)}
+.pop{position:absolute;z-index:70;width:300px;background:var(--surface);border:1px solid var(--line-2);border-radius:16px;padding:16px;box-shadow:0 14px 40px rgba(0,0,0,.28);display:grid;gap:10px}
+.pop[hidden]{display:none}
+.pop h3{font-stretch:76%;font-weight:760;font-size:1.2rem;line-height:1.1;padding-right:34px}
+.pop-x{position:absolute;top:8px;right:8px}
+.chips-row{display:flex;flex-wrap:wrap;gap:6px}
+.pop-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pop-actions .btn{padding-inline:10px;text-decoration:none}
+.pop-list{display:grid;gap:2px;font-size:.88rem}
+.pop-list a{color:var(--accent-text);text-underline-offset:3px;font-weight:600;display:inline-block;padding:3px 0}
+@media(max-width:700px){.pop{position:fixed;left:12px;right:12px;bottom:calc(var(--tab-h) + 12px);width:auto;top:auto!important}}
+.map .venue,.map .venue-t,.map .ring-t{pointer-events:none}
+.zoom button,.stamp{white-space:nowrap}
+@media(max-width:700px){.map .pin.trip .dot,.map .pin.rt .dot{r:16px}.map .pin.disc .dot{r:9px}.map .pin text{font-size:21px}.map .venue-t{font-size:16px}}

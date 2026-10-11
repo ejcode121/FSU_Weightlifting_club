@@ -124,8 +124,9 @@
         <div>
           <h2 class="sec-title" id="h-stay">Airbnbs</h2>
         </div>
-        <button class="btn pri" id="addL" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Add Airbnb</button>
+        <div class="row"><button class="btn pri" id="addLink" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Add Airbnb by link</button><button class="btn" id="addL" type="button">Add manually</button></div>
       </div>
+      <div class="map-wrap" id="stayMap"></div>
       <details class="dis">
         <summary>Grade settings<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-chev"/></svg></summary>
         <div class="dis-body">
@@ -152,6 +153,7 @@
         </div>
         <button class="btn pri" id="addT" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Add transportation</button>
       </div>
+      <div class="map-wrap" id="routeMap"></div>
       <div class="cards two" id="transList"></div>
     </section>
 
@@ -242,6 +244,8 @@
 
 </main>
 
+<dialog id="stayDlg" aria-label="Add Airbnb"><form id="stayForm"></form></dialog>
+<div class="pop" id="mapPop" role="dialog" aria-label="Map details" hidden></div>
 <dialog id="jobDlg" aria-label="Job details"><form method="dialog" id="jobForm"></form></dialog>
 <div id="toast" role="status" aria-live="polite"></div>
 

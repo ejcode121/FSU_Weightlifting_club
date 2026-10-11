@@ -86,3 +86,10 @@ Repo `ejcode121/fsu_weightlifting_club`; work branch `claude/fsu-budget-calculat
 
 ## Live links (src/live.js)
 Static file, so no live scraping. "Live links" (Trip) and "Live this week" (Find work) rebuild real search URLs at every page open: today's date, meet day, and lifter count go into the Airbnb/Vrbo/Google Flights links; 4 job searches rotate daily (Indeed past-7-days, Handshake, Craigslist); Eventbrite flips between this week and this weekend. Verified: calendar.fsu.edu and the USAW 2027 calendar page load; Volunteermatch redirects to Idealist, so Idealist is linked directly. Eventbrite/Airbnb/Enterprise-style URL patterns could not be fetched from the sandbox. Click-test them from a real browser.
+
+## Map wrapper (src/discover.js)
+Stay map (venue at center, rings, pins graded A–D, hollow pins = nearby) and a Tallahassee→Richmond route map (pins: vans, TLH/RIC flights, charter bus). Clicking a pin opens a popover with two actions: **View on website** (opens the real site) or **Add to trip** / **Use this stay**. Added items go straight into the matrix; prices from nearby/transport pins are flagged "Estimated" until edited.
+- Live sources, fetched on open when the cache is >24h old (key `fsu-lifting-discover-v1`), keyless: OpenStreetMap Overpass (hotels/motels/guest houses/apartments/hostels near the venue; car-rental branches near Tallahassee), OSRM (road miles/minutes, the route), Nominatim (address → pin).
+- **Airbnb has no public data feed and its terms forbid scraping, so Airbnb listings cannot be pulled automatically.** "Add Airbnb by link" takes the listing URL, an address (geocoded onto the map), and the price breakdown; it then behaves like every other stay.
+- OSM has no prices, so nearby stays use per-type estimates. Flights/vans/bus use the sample prices.
+- Verified only against mocked responses (31 checks in the scratchpad test_maps.py): the sandbox can't reach overpass/osrm/nominatim. Real-world check needed. If Overpass is slow or rate-limited the map just shows the last cached data or "Offline".

@@ -94,7 +94,7 @@ function stayView(l) {
   const c = lodgingCost(l), n = baseNights(), people = Math.max(1, num(S.team.people)), g = lodgingGrade(l);
   const has = !(l.miles === null || l.miles === undefined || l.miles === "");
   return `<div class="stay-cost"><b class="disp">${usd(c.total)}</b><span>${n} nights, ${usd(c.total / people)} per person</span></div>
-    <div class="stay-chips"><span class="chip">${ico("bed")}${c.label}</span>
+    <div class="stay-chips"><span class="chip">${ico("bed")}${c.label}</span>${l.est ? `<span class="chip">Estimated price</span>` : ""}
       <span class="chip">${ico("pin")}${has ? `${num(l.miles)} mi to the venue` : "No distance"}</span>${l.mins ? `<span class="chip">${num(l.mins)} min drive</span>` : ""}</div>`;
 }
 function updateLodging() {
@@ -121,7 +121,7 @@ function renderLodging() {
       </div>
       <div data-view style="display:grid;gap:12px"></div>
       <div class="stay-foot">
-        <label class="use"><input class="sr" type="radio" name="selL" data-pick ${l.id === S.selL ? "checked" : ""}><span class="pill">${ico("check")}Use this stay</span></label>
+        <label class="use"><input class="sr" type="radio" name="selL" data-pick ${l.id === S.selL ? "checked" : ""}><span class="pill">${ico("check")}Use this stay</span></label>${l.url ? `<a class="btn sm" href="${esc(l.url)}" target="_blank" rel="noopener">View on website</a>` : ""}
       </div>
       <details class="dis" data-open="${l.id}" ${openCards.has(l.id) ? "open" : ""}>
         <summary>Prices and details${ico("chev")}</summary>
@@ -137,7 +137,7 @@ function renderLodging() {
 }
 function rideView(t) {
   const people = Math.max(1, num(S.team.people));
-  return variants(t).map(v => { const c = transportCost(t, v.n);
+  return (t.est ? `<div><span class="chip">Estimated prices</span></div>` : "") + variants(t).map(v => { const c = transportCost(t, v.n);
     return `<div class="ride-line"><span class="lab">${ico(v.red ? "moon" : "bed")}${v.red ? `Red-eye home, ${v.n} nights` : `Stay over, ${v.n} nights`}</span><b class="disp">${usd(c.total)}</b><small>${c.label}, ${usd(c.total / people)} per person</small></div>`; }).join("");
 }
 function updateTransport() {
@@ -341,12 +341,12 @@ function suggestPlan() {
 
 /* ---------------- orchestration ---------------- */
 function refreshLight() {
-  renderLiveTrip(); updateLodging(); updateTransport(); updateLines(); renderTimeline(); renderPicks(); renderMatrix();
+  renderMaps(); renderLiveTrip(); updateLodging(); updateTransport(); updateLines(); renderTimeline(); renderPicks(); renderMatrix();
   renderHeroes(); renderSetupFacts(); renderJobs(); renderPlan(); renderMonthSelectKeep();
 }
 function renderMonthSelectKeep() { renderMonthSelect(); F.month = $("#fMonth").value; }
 function renderAll() {
-  renderLive(); bindStatic(); renderLodging(); renderTransport(); updateLines(); renderTimeline(); renderPicks(); renderMatrix();
+  renderLive(); renderMaps(); bindStatic(); renderLodging(); renderTransport(); updateLines(); renderTimeline(); renderPicks(); renderMatrix();
   renderCatChips(); renderMonthSelect(); renderJobs(); renderPlan(); renderHeroes(); renderSetupFacts();
 }
 
@@ -382,6 +382,7 @@ function listHandlers(rootSel, listName, selKey, rerender) {
     const t = e.target;
     it[k] = t.type === "checkbox" ? t.checked
       : t.type === "number" ? ((t.dataset.opt !== undefined && t.value === "") ? null : num(t.value)) : t.value;
+    if (it.est && k !== "name" && k !== "url" && k !== "redeye" && (listName === "transport" || ["nightly", "cleaning", "service"].includes(k))) it.est = false;
     save(); refreshLight();
   });
   root.addEventListener("change", e => {
@@ -411,6 +412,7 @@ function listHandlers(rootSel, listName, selKey, rerender) {
 }
 listHandlers("#lodgingList", "lodging", "selL", renderLodging);
 listHandlers("#transList", "transport", "selT", renderTransport);
+$("#addLink").onclick = openStayDlg;
 $("#addL").onclick = () => {
   const l = { id: uid(), name: "New Airbnb", url: "", nightly: 300, cleaning: 100, service: 100, tax: 12, sleeps: 8, miles: null, mins: null };
   S.lodging.push(l); if (!S.selL) S.selL = l.id; openCards.add(l.id); S.lmin = ""; save(); renderLodging(); refreshLight();
@@ -532,3 +534,4 @@ $("#importFile").onchange = async e => {
 $("#resetBtn").onclick = () => { if (confirm("Reset everything back to the starting sample data? This can't be undone.")) { S = defaults(); save(); heroFirst = true; openCards.clear(); renderAll(); toast("Back to the starting data."); } };
 
 renderAll();
+autoDiscover();
