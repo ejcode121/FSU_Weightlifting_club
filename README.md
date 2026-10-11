@@ -1,6 +1,6 @@
 # FSU Weightlifting – Trip Budget & Fundraising Planner
 
-A single-file web app (`index.html`, no install, no server). Open it in any browser, or host it free with GitHub Pages
+A single-file web app (`index.html`, no install, no server). Source is in `src/`; rebuild with `python3 tools/build.py`. Open it in any browser, or host it free with GitHub Pages
 (Settings → Pages → deploy from branch, root).
 
 **1 · Trip** – built for **USAW University Nationals, Richmond VA, Apr 15–18, 2027** (Greater Richmond Convention Center).
