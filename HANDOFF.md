@@ -5,7 +5,7 @@ _Last updated: 2026-10-11 · Branch: `claude/fsu-budget-calculator-wfvkko`_
 ## 00. Update — UI redesign ("Richmond Total")
 The UI was rebuilt as a design piece; all logic is unchanged (same state shape, same storage key `fsu-lifting-budget-v2`).
 - **Source now lives in `src/`**: `template.html`, `styles.css`, `core.js` (data + calculations), `ui.js` (rendering + events). Run `python3 tools/build.py` to regenerate the single-file `index.html` (inlines CSS, JS, and the base64 Archivo subset in `fonts/`). Edit `src/`, not `index.html`.
-- Hero is a barbell: plates = dollars raised (unit auto-picked from the goal), dashed ghost plates = what is left. Grades are rings, transport options are tickets, a "Smart picks" row and delta-vs-goal matrix, a cumulative chart with the Mar 4 2027 early-bird deadline and meet marker, a per-month chart, and "Suggest a plan".
+- Hero is a plain progress rectangle (raised ÷ goal, turns green past the goal) with Raised / Goal / Still to raise readouts. Grades are rings, transport options are tickets, a "Smart picks" row and delta-vs-goal matrix, a cumulative chart with the Mar 4 2027 early-bird deadline and meet marker, a per-month chart, and "Suggest a plan".
 - Tested headless: 35 checks pass (logic, red-eye rule, grades, persistence, import/export, job dialog), no console errors, light/dark at 390 and 1280 px. Not tested: real phone, Safari.
 - Still to verify: real prices, driving distance, bus hours-of-service, USAW membership, host late check-out, Phase 2 job postings.
 

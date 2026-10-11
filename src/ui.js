@@ -27,87 +27,41 @@ function keepFocus(fn) {
   if (sel) { const n = document.querySelector(sel); if (n) n.focus({ preventScroll: true }); }
 }
 
-/* ---------------- the bar ---------------- */
-const PLATES = [
-  { kg: 25, w: 34, h: 270, c: "var(--p-red)", t: "#fff" },
-  { kg: 20, w: 30, h: 270, c: "var(--p-blue)", t: "#fff" },
-  { kg: 15, w: 26, h: 270, c: "var(--p-yellow)", t: "#2A2108" },
-  { kg: 10, w: 22, h: 270, c: "var(--p-green)", t: "#fff" },
-  { kg: 5, w: 18, h: 190, c: "var(--p-white)", t: "#1B1E23" },
-  { kg: 2.5, w: 14, h: 150, c: "var(--p-red)", t: "#fff" },
-  { kg: 2, w: 12, h: 130, c: "var(--p-blue)", t: "#fff" },
-  { kg: 1.5, w: 10, h: 118, c: "var(--p-yellow)", t: "#2A2108" },
-  { kg: 1, w: 9, h: 106, c: "var(--p-green)", t: "#fff" },
-  { kg: .5, w: 8, h: 94, c: "var(--p-white)", t: "#1B1E23" }
-];
-const UNITS = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000, 20000, 25000, 50000];
-function decompose(units) {
-  let h = Math.max(0, Math.round(units * 2)); const out = [];
-  for (const p of PLATES) { const n = Math.floor(h / (p.kg * 2)); for (let i = 0; i < n; i++) out.push(p); h -= n * p.kg * 2; }
-  return out;
-}
-const plateW = list => list.reduce((s, p) => s + p.w + 3, 0);
-function pickUnit(goal) {
-  if (goal <= 0) return 1;
-  for (const u of UNITS) if (plateW(decompose(goal / u)) <= 360) return u;
-  return UNITS[UNITS.length - 1];
-}
-let heroPrev = [], heroFirst = true;
-function barSVG(raised, g) {
-  const u = pickUnit(g), goalU = g / u;
-  const loadU = Math.min(raised / u, Math.max(goalU, 1) * 1.6);
-  const loaded = decompose(loadU), ghost = raised < g ? decompose(goalU - loadU) : [];
-  const cy = 150, x0 = 324; let x = x0, out = "";
-  const draw = (p, i, isGhost) => {
-    const y = cy - p.h / 2, big = p.w >= 20 && !isGhost;
-    const anim = heroFirst || (!isGhost && heroPrev[i] !== p.kg) || isGhost;
-    const label = big ? `<text transform="translate(${x + p.w / 2},${cy}) rotate(-90)" text-anchor="middle" dominant-baseline="central" style="fill:${p.t}">${usdK(p.kg * u)}</text>` : "";
-    const g1 = `<g class="plate ${p.kg === 5 || p.kg === .5 ? "white" : ""} ${isGhost ? "ghost" : ""} ${anim ? "in" : ""}" style="--d:${Math.min(i, 14) * 55}ms;--dir:${isGhost ? 0 : 1}">
-      <rect class="body" x="${x}" y="${y}" width="${p.w}" height="${p.h}" rx="4" style="fill:${p.c}"/>${isGhost ? "" : `<rect class="shine" x="${x + 3}" y="${y + 8}" width="${Math.max(2, p.w * .22)}" height="${p.h - 16}" rx="2"/>`}${label}</g>`;
-    x += p.w + 3; return g1;
-  };
-  loaded.forEach((p, i) => { out += draw(p, i, false); });
-  ghost.forEach((p, i) => { out += draw(p, loaded.length + i, true); });
-  heroPrev = loaded.map(p => p.kg);
-  const collar2 = `<rect class="collar" x="${Math.min(x + 4, 960)}" y="124" width="12" height="52" rx="3"/>`;
-  const used = [...new Map([...loaded, ...ghost].map(p => [p.kg, p])).values()];
-  const svg = `<svg viewBox="0 0 1000 300" role="img" aria-label="A barbell loaded to ${raised >= g ? "past" : `${Math.round(g ? raised / g * 100 : 0)}% of`} the ${usd(g)} goal. Each plate stands for money raised.">
-    <line class="floor" x1="0" x2="1000" y1="292" y2="292"/>
-    <rect class="shaft" x="0" y="142" width="324" height="16" rx="3"/><rect class="knurl" x="40" y="142" width="200" height="16"/>
-    <rect class="collar" x="300" y="120" width="14" height="60" rx="3"/>
-    <rect class="sleeve" x="314" y="134" width="686" height="32" rx="2"/>${out}${collar2}</svg>`;
-  return { svg, used, u };
+/* ---------------- progress bar ---------------- */
+let heroFirst = true;
+function progressHTML(raised, g) {
+  const pct = g > 0 ? Math.min(100, raised / g * 100) : 0, label = g > 0 ? Math.round(raised / g * 100) + "%" : "0%";
+  const inside = pct >= 14, state = raised >= g && g > 0 ? "ok" : "";
+  return `<div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(pct)}" aria-label="Fundraising progress toward ${usd(g)}">
+    <div class="prog-fill ${state} ${heroFirst ? "grow" : ""}" style="width:${pct}%"></div>
+    <span class="prog-pct ${inside ? "in" : ""}" style="left:${pct}%">${label}</span></div>
+    <div class="prog-scale"><span>$0</span><span>Goal ${usd(g)}</span></div>`;
 }
 function heroHTML(mode) {
   const g = goal(), raised = plannedTotal(), gap = raised - g, nd = neededPerMonth(), p = num(S.team.people), mo = Math.max(1, num(S.team.months));
-  const b = barSVG(raised, g);
-  const title = mode === "trip" ? "Load the bar for Richmond" : "Here's what your shifts load";
+  const title = mode === "trip" ? "Get the team to Richmond" : "Here's what your shifts raise";
   const sub = mode === "trip"
     ? `${p} lifters raising ${usd(g)} before the Apr 15 to 18 meet. That's ${usd(nd, 2)} each, every month for ${mo} months.`
     : raised === 0 ? `Add shifts and watch the bar fill. Each lifter needs about ${usd(nd, 2)} a month.`
     : gap >= 0 ? `This plan raises ${usd(raised)}, ${usd(gap)} past the goal.` : `${usd(-gap)} short. A shift or two more each month would close it.`;
   const cls = raised === 0 ? "" : gap >= 0 ? "ok" : "warn";
-  const key = b.used.map(pl => `<span class="k"><i style="background:${pl.c}"></i>${usdK(pl.kg * b.u)}</span>`).join("");
-  return `<h1 class="hero-title">${title}</h1>${mode === "trip" ? "" : ""}<p class="hero-sub">${sub}</p>
-    <div class="bar-fig">${b.svg}</div>
+  return `<h1 class="hero-title">${title}</h1><p class="hero-sub">${sub}</p>
+    <div class="bar-fig">${progressHTML(raised, g)}</div>
     <dl class="readout">
-      <div><dt><i></i>Loaded</dt><dd>${usd(raised)}</dd></div>
+      <div><dt><i></i>Raised</dt><dd>${usd(raised)}</dd></div>
       <div><dt><i class="ghost"></i>Goal</dt><dd>${usd(g)}</dd></div>
-      <div><dt><i class="${gap >= 0 && raised ? "ok" : "gap"}"></i>${gap >= 0 && raised ? "Cushion" : "Still to load"}</dt><dd class="${cls}">${usd(Math.abs(raised ? gap : g))}</dd></div>
+      <div><dt><i class="${gap >= 0 && raised ? "ok" : "gap"}"></i>${gap >= 0 && raised ? "Cushion" : "Still to raise"}</dt><dd class="${cls}">${usd(Math.abs(raised ? gap : g))}</dd></div>
     </dl>
-    <div class="plate-key" aria-label="Plate values"><span>Each plate:</span>${key}</div>
-    ${raised === 0 ? `<div class="hero-cta"><button class="btn pri" type="button" data-act="suggest">${ico("spark")}Suggest a plan</button><button class="btn" type="button" data-act="goto-jobs">${ico("search")}Find shifts</button><p>No shifts in the plan yet, so the bar is empty. The dashed plates are what's left to load.</p></div>` : ""}`;
+    ${raised === 0 ? `<div class="hero-cta"><button class="btn pri" type="button" data-act="suggest">${ico("spark")}Suggest a plan</button><button class="btn" type="button" data-act="goto-jobs">${ico("search")}Find shifts</button><p>No shifts in the plan yet, so the bar is empty.</p></div>` : ""}`;
 }
 function renderHeroes() {
   const g = goal(), raised = plannedTotal(), gap = raised - g;
-  const first = heroFirst;
   $("#heroTrip").innerHTML = heroHTML("trip");
-  heroFirst = false; // second hero renders without the full entrance
+  heroFirst = false;
   $("#heroPlan").innerHTML = heroHTML("plan");
   const st = raised >= g && g > 0 ? ["ok", "On track"] : raised === 0 ? ["warn", "No shifts yet"] : ["bad", `Short ${usd(-gap)}`];
   $("#mini").innerHTML = `<b>${usd(raised)}</b><span class="of">of ${usd(g)}</span><span class="st ${st[0]}">${st[1]}</span>`;
   $("#loadFill").style.width = Math.min(100, g ? raised / g * 100 : 0) + "%";
-  void first;
 }
 function renderSetupFacts() {
   const p = num(S.team.people), mo = num(S.team.months);
