@@ -341,12 +341,12 @@ function suggestPlan() {
 
 /* ---------------- orchestration ---------------- */
 function refreshLight() {
-  updateLodging(); updateTransport(); updateLines(); renderTimeline(); renderPicks(); renderMatrix();
+  renderLiveTrip(); updateLodging(); updateTransport(); updateLines(); renderTimeline(); renderPicks(); renderMatrix();
   renderHeroes(); renderSetupFacts(); renderJobs(); renderPlan(); renderMonthSelectKeep();
 }
 function renderMonthSelectKeep() { renderMonthSelect(); F.month = $("#fMonth").value; }
 function renderAll() {
-  bindStatic(); renderLodging(); renderTransport(); updateLines(); renderTimeline(); renderPicks(); renderMatrix();
+  renderLive(); bindStatic(); renderLodging(); renderTransport(); updateLines(); renderTimeline(); renderPicks(); renderMatrix();
   renderCatChips(); renderMonthSelect(); renderJobs(); renderPlan(); renderHeroes(); renderSetupFacts();
 }
 

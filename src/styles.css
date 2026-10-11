@@ -351,3 +351,18 @@ dialog h2{font-stretch:66%;font-weight:800;font-size:2.1rem;line-height:.95;marg
 .prog-scale{display:flex;justify-content:space-between;margin-top:8px;font-size:.84rem;color:var(--ink-2)}
 
 .hero-title{font-size:clamp(2.6rem,10vw,4.6rem)}
+
+/* live links */
+.stamp{font-size:.9rem;font-weight:600;color:var(--ink-2);background:var(--inset);border:1px solid var(--line);border-radius:999px;padding:4px 12px}
+.live-h{font-size:.84rem;font-weight:600;color:var(--ink-2);margin:18px 0 8px}
+.live-grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr))}
+.live-link{display:grid;gap:2px;padding:12px 14px;border:1px solid var(--line-2);border-radius:12px;background:var(--surface);text-decoration:none;color:var(--ink);min-height:56px;align-content:center}
+.live-link:hover{border-color:var(--accent-text)}
+.live-link span{font-weight:650}
+.live-link small{color:var(--ink-3);font-size:.78rem}
+.live-link .tag{font-style:normal;margin-left:4px}
+.live-picks{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr))}
+.live-pick{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:12px 14px;display:grid;gap:6px}
+.live-pick b{font-stretch:76%;font-weight:760;font-size:1.1rem;line-height:1.1}
+.live-pick-links{display:flex;flex-wrap:wrap;gap:2px 12px}
+.live-pick-links a{font-size:.84rem;font-weight:600;color:var(--accent-text);text-underline-offset:3px;padding:4px 0}

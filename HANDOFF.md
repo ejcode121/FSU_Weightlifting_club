@@ -83,3 +83,6 @@ work; steppers feed Plan tab; state persists across reload; screenshots of Trip 
 
 ## 5. Git
 Repo `ejcode121/fsu_weightlifting_club`; work branch `claude/fsu-budget-calculator-wfvkko` (pushed). Files: `index.html`, `README.md`, `HANDOFF.md`.
+
+## Live links (src/live.js)
+Static file, so no live scraping. "Live links" (Trip) and "Live this week" (Find work) rebuild real search URLs at every page open: today's date, meet day, and lifter count go into the Airbnb/Vrbo/Google Flights links; 4 job searches rotate daily (Indeed past-7-days, Handshake, Craigslist); Eventbrite flips between this week and this weekend. Verified: calendar.fsu.edu and the USAW 2027 calendar page load; Volunteermatch redirects to Idealist, so Idealist is linked directly. Eventbrite/Airbnb/Enterprise-style URL patterns could not be fetched from the sandbox. Click-test them from a real browser.
