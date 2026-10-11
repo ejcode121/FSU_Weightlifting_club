@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FSU Lifting Trip Budget</title>
+<style>
+:root{
+  --garnet:#782f40; --garnet-d:#5c2230; --gold:#ceb888; --gold-l:#f1e9d6;
+  --bg:#f6f4f0; --card:#fff; --ink:#1e1a1b; --mute:#6b6366; --line:#e3ddd6;
+  --ok:#1f7a4d; --ok-bg:#e3f4ea; --warn:#9a6a00; --warn-bg:#fff3d1; --bad:#b3261e; --bad-bg:#fde7e5;
+  --radius:12px;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#161214;--card:#221c1f;--ink:#f3eeea;--mute:#a79ea2;--line:#383034;--gold-l:#2d2630;
+  --ok:#5fd39a;--ok-bg:#12301f;--warn:#f0c15a;--warn-bg:#33290f;--bad:#ff8a80;--bad-bg:#3a1613;--garnet:#9b3d54}
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+h1,h2,h3{margin:0;line-height:1.2}
+button,input,select,textarea{font:inherit;color:inherit}
+header.top{background:var(--garnet-d);color:#fff;padding:14px 16px 0}
+header.top h1{font-size:1.15rem}
+header.top p{margin:2px 0 10px;color:var(--gold);font-size:.85rem}
+.wrap{max-width:1100px;margin:0 auto}
+.summary{position:sticky;top:0;z-index:20;background:var(--garnet);color:#fff;box-shadow:0 2px 8px #0003}
+.summary .wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:4px 10px;padding:6px 16px}
+.summary .stat b{font-size:.95rem}.summary .stat small{font-size:.62rem}
+@media(min-width:720px){.summary .wrap{grid-template-columns:repeat(5,1fr);padding:10px 16px}.summary .stat b{font-size:1.15rem}.summary .stat small{font-size:.7rem}}
+.stat small{display:block;color:var(--gold);font-size:.7rem;text-transform:uppercase;letter-spacing:.04em}
+.stat b{font-size:1.15rem}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.8rem;font-weight:600}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}.pill.warn{background:var(--warn-bg);color:var(--warn)}.pill.bad{background:var(--bad-bg);color:var(--bad)}
+nav.tabs{display:flex;gap:4px;max-width:1100px;margin:0 auto}
+nav.tabs button{flex:1;background:transparent;border:0;color:#fff;padding:10px 6px;font-weight:600;border-bottom:3px solid transparent;cursor:pointer;opacity:.75}
+nav.tabs button[aria-selected=true]{opacity:1;border-color:var(--gold)}
+main{max-width:1100px;margin:0 auto;padding:16px}
+section.panel{display:none}section.panel.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:14px}
+.card h2{font-size:1.05rem;margin-bottom:4px}
+.hint{color:var(--mute);font-size:.85rem;margin:0 0 10px}
+.grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+label.f{display:flex;flex-direction:column;font-size:.78rem;color:var(--mute);gap:3px}
+input[type=text],input[type=number],input[type=url],input[type=search],input[type=month],select,textarea{
+  width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:1rem}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--garnet);outline-offset:1px}
+.btn{border:1px solid var(--line);background:var(--card);padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600}
+.btn.pri{background:var(--garnet);border-color:var(--garnet);color:#fff}
+.btn.sm{padding:4px 9px;font-size:.85rem}
+.btn.danger{color:var(--bad)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.opt{border:2px solid var(--line);border-radius:var(--radius);padding:12px;margin-bottom:10px;background:var(--card)}
+.opt.sel{border-color:var(--garnet);background:var(--gold-l)}
+.opt .head{display:flex;gap:10px;align-items:center;margin-bottom:8px}
+.opt .head input[type=text]{font-weight:700}
+.opt .calc{margin-top:8px;font-size:.9rem;display:flex;gap:14px;flex-wrap:wrap}
+.opt .calc b{font-size:1.05rem}
+.radio{width:22px;height:22px;accent-color:var(--garnet);flex:none}
+table.mx{width:100%;border-collapse:separate;border-spacing:4px;font-size:.85rem}
+table.mx th{font-weight:600;text-align:left;padding:4px;vertical-align:bottom;max-width:140px}
+table.mx td{padding:0}
+.cell{width:100%;border:2px solid transparent;border-radius:8px;padding:8px 4px;cursor:pointer;text-align:center;line-height:1.25}
+.cell b{display:block;font-size:.95rem}
+.cell.ok{background:var(--ok-bg);color:var(--ok)}.cell.warn{background:var(--warn-bg);color:var(--warn)}.cell.bad{background:var(--bad-bg);color:var(--bad)}
+.cell.sel{border-color:var(--garnet);box-shadow:0 0 0 2px var(--garnet)}
+.cell.best::after{content:"★ cheapest";display:block;font-size:.65rem}
+.scroll{overflow-x:auto}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:5px 12px;cursor:pointer;font-size:.88rem}
+.chip[aria-pressed=true]{background:var(--garnet);color:#fff;border-color:var(--garnet)}
+.filters{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-top:8px}
+.jobs{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(290px,1fr))}
+.job{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px;display:flex;flex-direction:column;gap:6px}
+.job.inplan{border-color:var(--garnet);box-shadow:0 0 0 1px var(--garnet)}
+.job h3{font-size:1rem}
+.earn{font-size:1.6rem;font-weight:800;color:var(--garnet)}
+@media(prefers-color-scheme:dark){.earn{color:var(--gold)}}
+.earn small{font-size:.8rem;font-weight:500;color:var(--mute)}
+.tag{display:inline-block;font-size:.72rem;padding:2px 8px;border-radius:99px;background:var(--gold-l);color:var(--ink);margin:0 4px 4px 0;border:1px solid var(--line)}
+.tag.g{background:var(--garnet);color:#fff;border-color:var(--garnet)}
+.job p{margin:0;font-size:.87rem;color:var(--mute)}
+.job .links{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto}
+.job .links a{font-size:.8rem;color:var(--garnet);font-weight:600}
+@media(prefers-color-scheme:dark){.job .links a{color:var(--gold)}}
+.stepper{display:flex;align-items:center;gap:8px;margin-top:6px}
+.stepper button{width:36px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--card);font-size:1.2rem;cursor:pointer;font-weight:700}
+.stepper span{min-width:7ch;text-align:center;font-weight:700}
+.bars{display:grid;gap:8px}
+.bar{display:grid;grid-template-columns:64px 1fr 120px;gap:8px;align-items:center;font-size:.88rem}
+.track{height:20px;background:var(--bg);border:1px solid var(--line);border-radius:6px;position:relative;overflow:hidden}
+.fill{height:100%;background:var(--garnet)}
+.tline{position:absolute;top:0;bottom:0;width:2px;background:var(--gold)}
+.big{font-size:1.5rem;font-weight:800}
+.empty{padding:30px;text-align:center;color:var(--mute)}
+dialog{border:0;border-radius:var(--radius);padding:18px;max-width:560px;width:calc(100% - 24px);background:var(--card);color:var(--ink)}
+dialog::backdrop{background:#0008}
+.mchips{display:flex;flex-wrap:wrap;gap:4px}
+.mchips label{font-size:.78rem;border:1px solid var(--line);border-radius:6px;padding:3px 7px;cursor:pointer}
+.mchips input{margin-right:3px}
+footer{max-width:1100px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-size:.8rem}
+@media print{.summary,nav.tabs,.btn,.stepper button{display:none!important}section.panel{display:block!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <h1>🏋️ FSU Weightlifting — Trip Budget &amp; Fundraising Planner</h1>
+    <p>Pick lodging + transportation → see the cost → find local shifts that raise it.</p>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="trip" aria-selected="true">1 · Trip</button>
+    <button role="tab" data-tab="jobs" aria-selected="false">2 · Find Work</button>
+    <button role="tab" data-tab="plan" aria-selected="false">3 · Plan</button>
+  </nav>
+</header>
+
+<div class="summary"><div class="wrap" id="summary"></div></div>
+
+<main>
+<!-- ============ TRIP ============ -->
+<section class="panel on" id="tab-trip">
+  <div class="card">
+    <h2>Team &amp; goal</h2>
+    <p class="hint">Change anything — every number on every tab updates instantly.</p>
+    <div class="grid">
+      <label class="f">Participants<input type="number" min="1" data-team="people"></label>
+      <label class="f">Months to fundraise<input type="number" min="1" max="24" data-team="months"></label>
+      <label class="f">First fundraising month<input type="month" data-team="start"></label>
+      <label class="f">Monthly target / student ($)<input type="number" min="0" step="5" data-team="target"></label>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <label><input type="radio" name="gm" value="fixed" data-gm> Fixed goal</label>
+      <input type="number" min="0" step="100" data-team="goal" style="max-width:130px">
+      <label style="margin-left:10px"><input type="radio" name="gm" value="trip" data-gm> Use the selected trip's total cost as the goal</label>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Trip basics</h2>
+    <div class="grid">
+      <label class="f">Destination / meet<input type="text" data-trip="dest" placeholder="e.g. Nationals – City, ST"></label>
+      <label class="f">Nights<input type="number" min="1" data-trip="nights"></label>
+      <label class="f">Entry / registration fee per lifter ($)<input type="number" min="0" data-trip="reg"></label>
+      <label class="f">Food per person per day ($)<input type="number" min="0" data-trip="food"></label>
+      <label class="f">Other team costs, total ($)<input type="number" min="0" data-trip="misc"></label>
+    </div>
+    <p class="hint" style="margin-top:8px" id="extrasLine"></p>
+  </div>
+
+  <div class="card">
+    <div class="row" style="justify-content:space-between"><h2>🏠 Airbnb / lodging options</h2><button class="btn sm pri" id="addL">+ Add Airbnb</button></div>
+    <p class="hint">Paste the listing price breakdown. We figure out how many places are needed for the whole team. Select one to use it in the budget.</p>
+    <div id="lodgingList"></div>
+  </div>
+
+  <div class="card">
+    <div class="row" style="justify-content:space-between"><h2>🚐 Transportation options</h2><button class="btn sm pri" id="addT">+ Add transportation</button></div>
+    <p class="hint">Flights, rental vans, personal cars (gas), charter bus, or a flat per-person cost.</p>
+    <div id="transList"></div>
+  </div>
+
+  <div class="card">
+    <h2>Cross-reference: every lodging × transport combo</h2>
+    <p class="hint">Total team cost (and per person). Green = within your goal, yellow = within 15% over, red = further over. Tap a cell to select that combo.</p>
+    <div class="scroll" id="matrix"></div>
+  </div>
+</section>
+
+<!-- ============ JOBS ============ -->
+<section class="panel" id="tab-jobs">
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <h2>Find local work</h2>
+      <button class="btn sm pri" id="addJob">+ Add a job / fundraiser</button>
+    </div>
+    <p class="hint">Pay rates are <b>estimates</b> for Tallahassee — tap “Edit” to put in real numbers when you find an opening. Use the search buttons on a card to see actual listings near FSU.</p>
+    <input type="search" id="q" placeholder="Search: moving, tutoring, events, weekend, campus…" aria-label="Search jobs">
+    <div class="chips" id="catChips"></div>
+    <div class="filters">
+      <label class="f">Area<select id="fArea"><option value="">Anywhere near FSU</option><option value="campus">On campus / walkable</option><option value="near">Within ~3 mi</option><option value="city">Around Tallahassee</option></select></label>
+      <label class="f">When<select id="fWhen"><option value="">Any time</option><option value="weekday">Weekdays</option><option value="evening">Evenings</option><option value="weekend">Weekends</option></select></label>
+      <label class="f">In season during<select id="fMonth"></select></label>
+      <label class="f">Sort by<select id="fSort"><option value="earn">Most per shift</option><option value="hourly">Highest hourly</option><option value="short">Shortest shift</option></select></label>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <label><input type="checkbox" id="fFew"> Only jobs that hit my monthly target in 2 shifts or fewer</label>
+    </div>
+    <p class="hint" id="resCount" style="margin:8px 0 0"></p>
+  </div>
+  <div class="jobs" id="jobList"></div>
+</section>
+
+<!-- ============ PLAN ============ -->
+<section class="panel" id="tab-plan">
+  <div class="card">
+    <h2>Each student's monthly shifts</h2>
+    <p class="hint">Add shifts from the Find Work tab (or adjust here). This is what one student does every month.</p>
+    <div id="planList"></div>
+  </div>
+  <div class="card">
+    <h2>Month-by-month (per student)</h2>
+    <p class="hint">Seasonal jobs only count in months they’re in season. The gold line is your monthly target.</p>
+    <div class="bars" id="bars"></div>
+  </div>
+  <div class="card">
+    <h2>Team result</h2>
+    <div id="result"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn pri" id="copyBtn">Copy summary for group chat</button>
+      <button class="btn" id="printBtn">Print</button>
+      <button class="btn" id="exportBtn">Save backup file</button>
+      <button class="btn" id="importBtn">Load backup file</button>
+      <button class="btn danger" id="resetBtn">Reset everything</button>
+      <input type="file" id="importFile" accept="application/json" hidden>
+    </div>
+    <p class="hint" id="copyMsg" role="status"></p>
+  </div>
+</section>
+</main>
+
+<footer>
+  Everything is saved in this browser automatically. Use “Save backup file” to share your setup with teammates (they load it with “Load backup file”).
+  Job pay figures are rough estimates, not offers. Before collecting money as a team, check with FSU Campus Recreation / Club Sports on how fundraising must be handled.
+</footer>
+
+<dialog id="jobDlg"><form method="dialog" id="jobForm"></form></dialog>
+
+<script>
+"use strict";
+const KEY = "fsu-lifting-budget-v1";
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const CATS = ["Events & Game Day","Moving & Labor","Food & Hospitality","Yard & Home","Tutoring & Coaching","Campus & Research","Delivery & Gigs","Team Fundraisers"];
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const uid = () => Math.random().toString(36).slice(2, 9);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const usd = (n, d = 0) => (isFinite(n) ? n : 0).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: d, maximumFractionDigits: d });
+
+/* ---------------- default data ---------------- */
+// [title, cat, rate, hours, tips, area, when[], months|null, how-to-find, search query, description]
+const SEED_JOBS = [
+ ["Stadium / arena event staff","Events & Game Day",15,6,0,"campus",["weekend","evening"],null,"Game-day and Civic Center event jobs are posted on Handshake and by event-staffing companies.","event staff usher","Ushering, ticket-taking, guest services and crowd management at games, concerts and shows."],
+ ["Event setup & teardown crew","Events & Game Day",17,5,0,"city",["weekday","evening","weekend"],null,"Rental, AV and staging companies hire day-of labor — lifters are great at this.","event setup crew","Set up and break down tables, stages and tents. Heavy lifting, short notice, good pay."],
+ ["Festival & market vendor help","Events & Game Day",15,6,20,"near",["weekend"],[3,4,10,11],"Ask vendors at Market Days / Springtime Tallahassee–type events; check Facebook groups.","festival vendor booth","Run a booth, load/unload vendors, handle crowds at spring & fall festivals."],
+ ["Catering server / banquet","Food & Hospitality",15,5,40,"city",["evening","weekend"],null,"Local caterers and event venues keep a flexible on-call student list.","catering server banquet","Serve at weddings, corporate events and fundraisers. Hourly plus tips."],
+ ["Bartender / barback (21+)","Food & Hospitality",12,6,60,"near",["evening","weekend"],null,"Downtown and Midtown bars; barbacks need no experience.","barback bartender","Tipped base wage plus tips — one busy night can beat 2 regular shifts."],
+ ["Restaurant host / busser","Food & Hospitality",12,5,35,"near",["evening","weekend"],null,"Walk in with a résumé between 2–4 pm.","restaurant host busser","Easy entry job around campus; tips vary."],
+ ["Moving help (load & haul)","Moving & Labor",22,4,10,"city",["weekday","weekend"],null,"Local moving companies and “two guys and a truck” outfits; Craigslist gigs.","moving helper","Peak around move-out (Apr–May, Jul–Aug, Dec). Lifting experience = instant hire."],
+ ["Apartment move-out cleaning","Moving & Labor",18,4,0,"near",["weekday","weekend"],[4,5,7,8,12],"Property managers and student-housing complexes near campus.","apartment turnover cleaning","Turnover cleaning between tenants; heavy demand at semester ends."],
+ ["Junk removal / hauling","Moving & Labor",20,4,0,"city",["weekday","weekend"],null,"Junk-removal franchises and Craigslist/Facebook “haul away” requests.","junk removal helper","Lift, load, dump. Per-hour or per-job."],
+ ["Yard work & landscaping","Yard & Home",18,3,0,"city",["weekday","weekend"],[3,4,5,6,7,8,9,10],"Landscaping crews; neighborhood Facebook / Nextdoor posts.","lawn landscaping helper","Mowing, edging, mulch. Summer heat — hydrate."],
+ ["Leaf & gutter cleanup","Yard & Home",18,3,0,"city",["weekend"],[10,11,12,1,2],"Neighborhood groups; flyers in nearby residential areas.","gutter leaf cleanup","Fall/winter cleanup for homeowners."],
+ ["Holiday-lights installation","Yard & Home",20,4,15,"city",["weekday","weekend"],[11,12],"Seasonal decorating companies hire in Oct–Nov.","holiday lights installer","Hang lights and decorations; ladders and teamwork."],
+ ["Seasonal retail & gift wrap","Delivery & Gigs",15,5,0,"near",["evening","weekend"],[11,12],"Apply in October at malls (Governor's Square) and big-box stores.","seasonal retail associate","Holiday retail shifts; some stores guarantee weekend hours."],
+ ["Mobile car wash / detailing","Yard & Home",20,3,15,"city",["weekend"],null,"Advertise in apartment complexes and Facebook groups.","car detailing","Build your own mini-business; supplies cost is small."],
+ ["Tutoring (math, SAT/ACT, chem)","Tutoring & Coaching",25,2,0,"near",["weekday","evening"],null,"FSU tutoring centers, private-tutor boards, high schools & families.","tutor math","Highest $/hour of the “easy” options; short shifts."],
+ ["Youth strength / sports coach","Tutoring & Coaching",20,2,0,"near",["evening","weekend"],null,"Local gyms, youth leagues, school athletic departments.","youth strength coach","Teach technique to kids and teens — great fit for lifters."],
+ ["Personal training (cert. required)","Tutoring & Coaching",35,1,0,"campus",["weekday","evening"],null,"Campus Rec / local gyms; need CPT certification.","personal trainer","Few shifts, high rate — if someone on the team is certified."],
+ ["Babysitting / nanny","Tutoring & Coaching",16,4,0,"near",["evening","weekend"],null,"Faculty families, FSU parent groups, Care/Sittercity-style sites.","babysitter","Flexible evenings and weekends."],
+ ["Pet sitting / dog walking","Delivery & Gigs",18,2,0,"near",["weekday","weekend"],null,"Rover/Wag-style apps and apartment bulletin boards.","pet sitter dog walker","Easy to fit between practice and class."],
+ ["Campus Rec official / lifeguard","Campus & Research",15,4,0,"campus",["weekday","evening"],[1,2,3,4,9,10,11],"FSU Campus Recreation hiring page / Handshake.","campus recreation official","Intramural referees and lifeguards; evenings during the semester."],
+ ["Paid research studies","Campus & Research",15,1.5,0,"campus",["weekday"],[1,2,3,4,9,10,11],"FSU department participant pools, flyers in Psychology / Health buildings.","research study participant","Quick sessions, sometimes pay is a flat $10–25."],
+ ["Summer orientation staff","Campus & Research",15,6,0,"campus",["weekday"],[5,6,7],"FSU Orientation / Student Affairs — apply in the fall or early spring.","orientation leader","Seasonal but steady hours."],
+ ["Food / grocery delivery","Delivery & Gigs",16,3,0,"city",["weekday","evening","weekend"],null,"DoorDash, Uber Eats, Instacart — sign up once, work whenever.","delivery driver","Most flexible; gas and wear-and-tear reduce the real take-home."],
+ ["Warehouse / package sorting","Delivery & Gigs",17,6,0,"city",["weekday","evening"],[11,12,1],"Shipping carriers hire seasonal help in the fall.","package handler warehouse","Peak season Nov–Jan. Good for lifters."],
+ ["Restaurant “spirit night”","Team Fundraisers",0,3,0,"near",["evening"],null,"Ask a local restaurant to donate 15–20% of sales for one night; promote it on social.","",
+   "GROUP: a busy night can bring in $300–500 for the team. Split across the people working/promoting."],
+ ["Community Olympic-lifting clinic","Team Fundraisers",0,2,0,"campus",["weekend"],null,"Host a $20-per-person technique clinic at your gym; invite alumni, local gyms, high-school teams.","",
+   "GROUP: 30 attendees × $20 ≈ $600. On-brand and low cost."],
+ ["Team car wash","Team Fundraisers",0,4,0,"near",["weekend"],[3,4,5,6,7,8,9,10],"Ask a parking-lot owner (bank, auto parts store) for permission.","",
+   "GROUP: roughly $400–600 for a good Saturday."],
+ ["Stadium concession stand (org payout)","Team Fundraisers",0,6,0,"campus",["weekend"],[1,2,3,4,9,10,11,12],"Venues and concession companies often pay student orgs a share to staff stands. Ask early — spots fill up.","",
+   "GROUP: payouts vary widely; confirm the rate before committing."],
+];
+// group-job payouts (title -> [payout, crew])
+const GROUP = { "Restaurant “spirit night”":[400,6], "Community Olympic-lifting clinic":[600,6], "Team car wash":[500,6], "Stadium concession stand (org payout)":[900,10] };
+
+function seedJobs() {
+  return SEED_JOBS.map(j => {
+    const g = GROUP[j[0]];
+    return { id: uid(), title: j[0], cat: j[1], rate: j[2], hours: j[3], tips: j[4], group: !!g, payout: g ? g[0] : 0, crew: g ? g[1] : 1,
+      area: j[5], when: j[6], months: j[7], how: j[8], query: j[9], desc: j[10] };
+  });
+}
+const TDEF = {
+  flight:   { fare: 350, bags: 70 },
+  van:      { seats: 15, daily: 110, days: 4, miles: 900, mpg: 12, gas: 3.1, tolls: 0 },
+  cars:     { seats: 4, miles: 900, mpg: 28, gas: 3.1, tolls: 0 },
+  bus:      { quote: 4500, tip: 200 },
+  perperson:{ fare: 150 }
+};
+const TFIELDS = {
+  flight:   [["fare","Round-trip fare / person ($)"],["bags","Bags & fees / person ($)"]],
+  van:      [["seats","Seats per van"],["daily","Rental $/day"],["days","Rental days"],["miles","Round-trip miles"],["mpg","Van MPG"],["gas","Gas $/gal"],["tolls","Tolls/parking per van ($)"]],
+  cars:     [["seats","People per car"],["miles","Round-trip miles"],["mpg","Car MPG"],["gas","Gas $/gal"],["tolls","Tolls/parking per car ($)"]],
+  bus:      [["quote","Charter quote ($)"],["tip","Driver tip ($)"]],
+  perperson:[["fare","Cost per person ($)"]]
+};
+const TNAMES = { flight:"✈️ Flight", van:"🚐 Rental van", cars:"🚗 Personal cars", bus:"🚌 Charter bus", perperson:"🚆 Other (per person)" };
+
+function defaults() {
+  const d = new Date(); const n = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+  const L = [
+    { id: uid(), name: "Sample: 5-bedroom house", url: "", nightly: 420, cleaning: 150, service: 180, tax: 12, sleeps: 10 },
+    { id: uid(), name: "Sample: 3-bedroom apartment", url: "", nightly: 260, cleaning: 100, service: 110, tax: 12, sleeps: 6 },
+    { id: uid(), name: "Sample: Budget bunk rooms", url: "", nightly: 190, cleaning: 80, service: 90, tax: 12, sleeps: 8 }
+  ];
+  const T = [
+    { id: uid(), type: "van", name: "Sample: 15-passenger vans", ...TDEF.van },
+    { id: uid(), type: "cars", name: "Sample: Personal cars", ...TDEF.cars },
+    { id: uid(), type: "flight", name: "Sample: Flights", ...TDEF.flight },
+    { id: uid(), type: "bus", name: "Sample: Charter bus", ...TDEF.bus }
+  ];
+  return {
+    team: { people: 18, months: 7, start: `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}`, target: 100, goalMode: "fixed", goal: 11000 },
+    trip: { dest: "", nights: 3, reg: 0, food: 30, misc: 0 },
+    lodging: L, transport: T, selL: L[0].id, selT: T[0].id,
+    jobs: seedJobs(), plan: {}
+  };
+}
+function load() {
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.team && s.jobs) return s; } catch (e) {}
+  return null;
+}
+let S = load() || defaults();
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+/* ---------------- calculations ---------------- */
+const num = v => (isFinite(+v) ? +v : 0);
+const days = () => num(S.trip.nights) + 1;
+function lodgingCost(l) {
+  const units = Math.max(1, Math.ceil(num(S.team.people) / Math.max(1, num(l.sleeps))));
+  const total = units * (num(l.nightly) * num(S.trip.nights) + num(l.cleaning) + num(l.service)) * (1 + num(l.tax) / 100);
+  return { units, total, label: `${units} place${units > 1 ? "s" : ""}` };
+}
+function transportCost(t) {
+  const p = num(S.team.people);
+  switch (t.type) {
+    case "flight": return { total: p * (num(t.fare) + num(t.bags)), label: `${p} seats` };
+    case "van": { const u = Math.max(1, Math.ceil(p / Math.max(1, num(t.seats))));
+      return { total: u * (num(t.daily) * num(t.days) + num(t.miles) / Math.max(1, num(t.mpg)) * num(t.gas) + num(t.tolls)), label: `${u} van${u > 1 ? "s" : ""}` }; }
+    case "cars": { const u = Math.max(1, Math.ceil(p / Math.max(1, num(t.seats))));
+      return { total: u * (num(t.miles) / Math.max(1, num(t.mpg)) * num(t.gas) + num(t.tolls)), label: `${u} car${u > 1 ? "s" : ""}` }; }
+    case "bus": return { total: num(t.quote) + num(t.tip), label: "1 bus" };
+    default: return { total: p * num(t.fare), label: `${p} people` };
+  }
+}
+const extras = () => num(S.team.people) * (num(S.trip.reg) + num(S.trip.food) * days()) + num(S.trip.misc);
+const comboCost = (l, t) => lodgingCost(l).total + transportCost(t).total + extras();
+const selL = () => S.lodging.find(x => x.id === S.selL) || S.lodging[0];
+const selT = () => S.transport.find(x => x.id === S.selT) || S.transport[0];
+const tripTotal = () => (selL() && selT()) ? comboCost(selL(), selT()) : extras();
+const goal = () => S.team.goalMode === "trip" ? tripTotal() : num(S.team.goal);
+const neededPerMonth = () => goal() / Math.max(1, num(S.team.people)) / Math.max(1, num(S.team.months));
+const target = () => num(S.team.target);
+function earn(j) {
+  return j.group ? num(j.payout) / Math.max(1, num(j.crew)) : num(j.rate) * num(j.hours) + num(j.tips);
+}
+const inSeason = (j, m) => !j.months || j.months.includes(m);
+function monthsList() {
+  const [y, m] = (S.team.start || "").split("-").map(Number);
+  const base = (y && m) ? new Date(y, m - 1, 1) : new Date();
+  return Array.from({ length: Math.max(1, num(S.team.months)) }, (_, i) => {
+    const d = new Date(base.getFullYear(), base.getMonth() + i, 1);
+    return { cal: d.getMonth() + 1, label: `${MONTHS[d.getMonth()]} ${String(d.getFullYear()).slice(2)}` };
+  });
+}
+function planJobs() { return S.jobs.filter(j => (S.plan[j.id] || 0) > 0); }
+function monthEarn(cal) {
+  return planJobs().reduce((s, j) => s + (inSeason(j, cal) ? S.plan[j.id] * earn(j) : 0), 0);
+}
+function plannedTotal() { return monthsList().reduce((s, m) => s + monthEarn(m.cal), 0) * num(S.team.people); }
+function statusClass(total, g) { return total <= g ? "ok" : total <= g * 1.15 ? "warn" : "bad"; }
+
+/* ---------------- render: summary ---------------- */
+function renderSummary() {
+  const g = goal(), raised = plannedTotal(), gap = raised - g, nd = neededPerMonth();
+  const pill = raised >= g && g > 0 ? `<span class="pill ok">On track +${usd(gap)}</span>` :
+    raised === 0 ? `<span class="pill warn">Add shifts in Find Work</span>` : `<span class="pill bad">Short ${usd(-gap)}</span>`;
+  $("#summary").innerHTML = `
+    <div class="stat"><small>Trip cost</small><b>${usd(tripTotal())}</b></div>
+    <div class="stat"><small>Goal</small><b>${usd(g)}</b></div>
+    <div class="stat"><small>Need / student / month</small><b>${usd(nd, 2)}</b></div>
+    <div class="stat"><small>Plan raises</small><b>${usd(raised)}</b></div>
+    <div class="stat"><small>Status</small>${pill}</div>`;
+}
+
+/* ---------------- render: trip tab ---------------- */
+function bindStatic() {
+  $$("[data-team]").forEach(el => { el.value = S.team[el.dataset.team]; });
+  $$("[data-trip]").forEach(el => { el.value = S.trip[el.dataset.trip]; });
+  $$("[data-gm]").forEach(el => { el.checked = el.value === S.team.goalMode; });
+  $('[data-team="goal"]').disabled = S.team.goalMode === "trip";
+}
+function numField(k, label, v) { return `<label class="f">${label}<input type="number" inputmode="decimal" min="0" step="any" data-k="${k}" value="${esc(v)}"></label>`; }
+function renderLodging() {
+  $("#lodgingList").innerHTML = S.lodging.map(l => `
+    <div class="opt ${l.id === S.selL ? "sel" : ""}" data-id="${l.id}" data-kind="L">
+      <div class="head">
+        <input class="radio" type="radio" name="selL" data-pick aria-label="Use this lodging" ${l.id === S.selL ? "checked" : ""}>
+        <input type="text" data-k="name" value="${esc(l.name)}" aria-label="Lodging name">
+        <button class="btn sm danger" data-del aria-label="Delete">✕</button>
+      </div>
+      <div class="grid">
+        ${numField("nightly", "Nightly rate ($)", l.nightly)}${numField("cleaning", "Cleaning fee ($)", l.cleaning)}
+        ${numField("service", "Service fee ($)", l.service)}${numField("tax", "Taxes (%)", l.tax)}
+        ${numField("sleeps", "Sleeps (people)", l.sleeps)}
+        <label class="f">Listing link<input type="url" data-k="url" value="${esc(l.url)}" placeholder="https://airbnb.com/rooms/…"></label>
+      </div>
+      <div class="calc"><span data-calc="L:${l.id}"></span></div>
+    </div>`).join("") || `<div class="empty">No lodging yet — add an Airbnb.</div>`;
+  updateCalcs();
+}
+function renderTransport() {
+  $("#transList").innerHTML = S.transport.map(t => `
+    <div class="opt ${t.id === S.selT ? "sel" : ""}" data-id="${t.id}" data-kind="T">
+      <div class="head">
+        <input class="radio" type="radio" name="selT" data-pick aria-label="Use this transportation" ${t.id === S.selT ? "checked" : ""}>
+        <input type="text" data-k="name" value="${esc(t.name)}" aria-label="Transportation name">
+        <button class="btn sm danger" data-del aria-label="Delete">✕</button>
+      </div>
+      <div class="grid">
+        <label class="f">Type<select data-k="type">${Object.entries(TNAMES).map(([k, v]) => `<option value="${k}" ${k === t.type ? "selected" : ""}>${v}</option>`).join("")}</select></label>
+        ${TFIELDS[t.type].map(([k, lab]) => numField(k, lab, t[k])).join("")}
+      </div>
+      <div class="calc"><span data-calc="T:${t.id}"></span></div>
+    </div>`).join("") || `<div class="empty">No transportation yet — add one.</div>`;
+  updateCalcs();
+}
+function updateCalcs() {
+  const people = Math.max(1, num(S.team.people));
+  S.lodging.forEach(l => { const el = $(`[data-calc="L:${l.id}"]`); if (!el) return; const c = lodgingCost(l);
+    el.innerHTML = `${c.label} · <b>${usd(c.total)}</b> total · ${usd(c.total / people)}/person`; });
+  S.transport.forEach(t => { const el = $(`[data-calc="T:${t.id}"]`); if (!el) return; const c = transportCost(t);
+    el.innerHTML = `${c.label} · <b>${usd(c.total)}</b> total · ${usd(c.total / people)}/person`; });
+  $("#extrasLine").textContent = `Per-person extras (entry fee + food for ${days()} days) and other costs: ${usd(extras())} total.`;
+}
+function renderMatrix() {
+  if (!S.lodging.length || !S.transport.length) { $("#matrix").innerHTML = `<div class="empty">Add at least one lodging and one transportation option.</div>`; return; }
+  const g = goal(), people = Math.max(1, num(S.team.people));
+  let best = Infinity; S.lodging.forEach(l => S.transport.forEach(t => { best = Math.min(best, comboCost(l, t)); }));
+  const head = `<tr><th></th>${S.transport.map(t => `<th>${esc(t.name)}</th>`).join("")}</tr>`;
+  const rows = S.lodging.map(l => `<tr><th>${esc(l.name)}</th>${S.transport.map(t => {
+    const c = comboCost(l, t), sel = l.id === S.selL && t.id === S.selT;
+    return `<td><button class="cell ${statusClass(c, g)} ${sel ? "sel" : ""} ${c === best ? "best" : ""}" data-l="${l.id}" data-t="${t.id}"><b>${usd(c)}</b>${usd(c / people)}/person</button></td>`;
+  }).join("")}</tr>`).join("");
+  $("#matrix").innerHTML = `<table class="mx">${head}${rows}</table>`;
+}
+
+/* ---------------- render: jobs tab ---------------- */
+const F = { q: "", cat: "", area: "", when: "", month: "", sort: "earn", few: false };
+function renderCatChips() {
+  $("#catChips").innerHTML = ["All", ...CATS].map(c => `<button class="chip" aria-pressed="${(c === "All" ? "" : c) === F.cat}" data-cat="${c === "All" ? "" : esc(c)}">${esc(c)}</button>`).join("");
+}
+function renderMonthSelect() {
+  $("#fMonth").innerHTML = `<option value="">Any month</option>` + monthsList().map((m, i) => `<option value="${m.cal}" ${String(m.cal) === F.month ? "selected" : ""}>${m.label}</option>`).join("");
+}
+function jobMatches(j) {
+  if (F.cat && j.cat !== F.cat) return false;
+  if (F.area && j.area !== F.area && !(F.area === "near" && j.area === "campus") && !(F.area === "city")) return false;
+  if (F.when && !j.when.includes(F.when)) return false;
+  if (F.month && !inSeason(j, +F.month)) return false;
+  if (F.few && !(earn(j) > 0 && Math.ceil(target() / earn(j)) <= 2)) return false;
+  if (F.q) {
+    const hay = `${j.title} ${j.cat} ${j.desc} ${j.how} ${j.when.join(" ")} ${j.area === "campus" ? "campus on-campus fsu" : j.area}`.toLowerCase();
+    if (!F.q.toLowerCase().split(/\s+/).filter(Boolean).every(w => hay.includes(w))) return false;
+  }
+  return true;
+}
+const AREA = { campus: "On campus", near: "Within ~3 mi", city: "Around Tallahassee" };
+const WHEN = { weekday: "Weekdays", evening: "Evenings", weekend: "Weekends" };
+function seasonText(j) {
+  if (!j.months) return "Year-round";
+  if (j.months.length === 12) return "Year-round";
+  return j.months.map(m => MONTHS[m - 1]).join(" · ");
+}
+const enc = encodeURIComponent;
+function searchLinks(j) {
+  if (!j.query) return "";
+  const q = enc(j.query);
+  return `<a href="https://www.indeed.com/jobs?q=${q}&l=Tallahassee%2C+FL&radius=10" target="_blank" rel="noopener">Indeed ↗</a>
+    <a href="https://fsu.joinhandshake.com/stu/postings?query=${q}" target="_blank" rel="noopener">Handshake ↗</a>
+    <a href="https://tallahassee.craigslist.org/search/ggg?query=${q}" target="_blank" rel="noopener">Craigslist gigs ↗</a>`;
+}
+function renderJobs() {
+  const list = S.jobs.filter(jobMatches).sort((a, b) =>
+    F.sort === "hourly" ? hourly(b) - hourly(a) : F.sort === "short" ? num(a.hours) - num(b.hours) : earn(b) - earn(a));
+  $("#resCount").textContent = `${list.length} of ${S.jobs.length} jobs shown · monthly target ${usd(target())} per student`;
+  if (!list.length) { $("#jobList").innerHTML = `<div class="empty" style="grid-column:1/-1">No matches. Try clearing a filter, or add your own job with “+ Add a job”.</div>`; return; }
+  $("#jobList").innerHTML = list.map(j => {
+    const e = earn(j), n = S.plan[j.id] || 0, need = e > 0 ? Math.ceil(target() / e) : 0;
+    return `<article class="job ${n ? "inplan" : ""}" data-id="${j.id}">
+      <div><span class="tag">${esc(j.cat)}</span>${j.group ? '<span class="tag g">Team effort</span>' : ""}</div>
+      <h3>${esc(j.title)}</h3>
+      <div class="earn">${usd(e)} <small>per shift${j.group ? ` · ${usd(j.payout)} ÷ ${j.crew} people` : ` · ${usd(j.rate)}/hr × ${j.hours}h${j.tips ? ` + ${usd(j.tips)} tips` : ""}`}</small></div>
+      <div><span class="tag">${need ? `${need} shift${need > 1 ? "s" : ""}/mo hits ${usd(target())}` : "—"}</span></div>
+      <p>${esc(j.desc)}</p>
+      <div>${j.when.map(w => `<span class="tag">${WHEN[w]}</span>`).join("")}<span class="tag">📍 ${AREA[j.area]}</span><span class="tag">📅 ${seasonText(j)}</span></div>
+      <p><b>Where to look:</b> ${esc(j.how)}</p>
+      <div class="links">${searchLinks(j)}<a href="#" data-edit>Edit</a></div>
+      <div class="stepper"><button data-step="-1" aria-label="Fewer shifts">−</button><span>${n} / month</span><button data-step="1" aria-label="More shifts">+</button></div>
+    </article>`;
+  }).join("");
+}
+const hourly = j => earn(j) / Math.max(.5, num(j.hours));
+
+/* ---------------- render: plan tab ---------------- */
+function renderPlan() {
+  const pj = planJobs();
+  $("#planList").innerHTML = pj.length ? pj.map(j => `
+    <div class="row" data-id="${j.id}" style="justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)">
+      <div style="flex:1;min-width:180px"><b>${esc(j.title)}</b><br><small class="hint">${usd(earn(j))}/shift · ${seasonText(j)}</small></div>
+      <div class="stepper"><button data-step="-1" aria-label="Fewer">−</button><span>${S.plan[j.id]} / month</span><button data-step="1" aria-label="More">+</button></div>
+      <b style="min-width:80px;text-align:right">${usd(S.plan[j.id] * earn(j))}</b>
+    </div>`).join("") : `<div class="empty">No shifts yet. Go to <b>Find Work</b> and tap + on any job.</div>`;
+
+  const ms = monthsList(), t = target();
+  const max = Math.max(t * 1.4, ...ms.map(m => monthEarn(m.cal)), 1);
+  $("#bars").innerHTML = ms.map(m => {
+    const e = monthEarn(m.cal);
+    return `<div class="bar"><span>${m.label}</span>
+      <div class="track"><div class="fill" style="width:${e / max * 100}%;${e >= t ? "" : "opacity:.65"}"></div><div class="tline" style="left:${t / max * 100}%"></div></div>
+      <span><b>${usd(e)}</b> ${e >= t ? "✓" : ""}</span></div>`;
+  }).join("");
+
+  const g = goal(), raised = plannedTotal(), per = ms.reduce((s, m) => s + monthEarn(m.cal), 0);
+  const gap = raised - g, nd = neededPerMonth();
+  $("#result").innerHTML = `
+    <div class="grid">
+      <div><small class="hint">Each student raises</small><div class="big">${usd(per)}</div></div>
+      <div><small class="hint">Team of ${num(S.team.people)} raises</small><div class="big">${usd(raised)}</div></div>
+      <div><small class="hint">Goal</small><div class="big">${usd(g)}</div></div>
+      <div><small class="hint">${gap >= 0 ? "Cushion" : "Still needed"}</small><div class="big" style="color:var(${gap >= 0 ? "--ok" : "--bad"})">${usd(Math.abs(gap))}</div></div>
+    </div>
+    <p style="margin-bottom:0">${raised === 0 ? "Add shifts to see your result." :
+      gap >= 0 ? `✅ This plan covers the goal${gap > 0 ? ` with ${usd(gap)} to spare (nice buffer for no-shows, fees, or surprise costs)` : ""}. You need at least ${usd(nd, 2)} per student per month; you're planning ${usd(per / Math.max(1, ms.length), 2)}.`
+      : `⚠️ Short by ${usd(-gap)}. Each student would need about ${usd(-gap / Math.max(1, num(S.team.people)))} more over ${ms.length} months (≈ ${usd(-gap / Math.max(1, num(S.team.people)) / Math.max(1, ms.length), 2)} more per month), or consider a cheaper lodging/transport combo.`}</p>`;
+}
+
+/* ---------------- refresh orchestration ---------------- */
+function refreshLight() { updateCalcs(); renderMatrix(); renderSummary(); renderJobs(); renderPlan(); renderMonthSelectKeep(); }
+function renderMonthSelectKeep() { renderMonthSelect(); F.month = $("#fMonth").value; }
+function renderAll() { bindStatic(); renderLodging(); renderTransport(); renderMatrix(); renderCatChips(); renderMonthSelect(); renderJobs(); renderPlan(); renderSummary(); }
+
+/* ---------------- events ---------------- */
+$$("nav.tabs button").forEach(b => b.addEventListener("click", () => {
+  $$("nav.tabs button").forEach(x => x.setAttribute("aria-selected", x === b));
+  $$("section.panel").forEach(p => p.classList.toggle("on", p.id === "tab-" + b.dataset.tab));
+  window.scrollTo({ top: 0 });
+}));
+function onTop(e) {
+  const el = e.target;
+  if (el.dataset.team) { S.team[el.dataset.team] = el.type === "number" ? num(el.value) : el.value; }
+  else if (el.dataset.trip) { S.trip[el.dataset.trip] = el.type === "number" ? num(el.value) : el.value; }
+  else if (el.dataset.gm !== undefined) { S.team.goalMode = el.value; $('[data-team="goal"]').disabled = el.value === "trip"; }
+  else return;
+  save(); refreshLight();
+}
+document.addEventListener("input", onTop);
+document.addEventListener("change", e => { if (e.target.dataset.gm !== undefined) onTop(e); });
+
+function listHandlers(rootSel, listName, selKey, kind, rerender) {
+  const root = $(rootSel);
+  const item = e => { const o = e.target.closest("[data-id]"); return o && S[listName].find(x => x.id === o.dataset.id); };
+  root.addEventListener("input", e => {
+    const it = item(e), k = e.target.dataset.k; if (!it || !k || k === "type") return;
+    it[k] = e.target.type === "number" ? num(e.target.value) : e.target.value; save(); refreshLight();
+  });
+  root.addEventListener("change", e => {
+    const it = item(e), k = e.target.dataset.k; if (!it || k !== "type") return;
+    it.type = e.target.value; Object.entries(TDEF[it.type]).forEach(([kk, v]) => { if (it[kk] === undefined) it[kk] = v; });
+    save(); rerender(); refreshLight();
+  });
+  root.addEventListener("click", e => {
+    const it = item(e); if (!it) return;
+    if (e.target.matches("[data-pick]")) { S[selKey] = it.id; save(); renderLodging(); renderTransport(); refreshLight(); }
+    if (e.target.matches("[data-del]")) {
+      if (!confirm(`Delete “${it.name}”?`)) return;
+      S[listName] = S[listName].filter(x => x !== it);
+      if (S[selKey] === it.id) S[selKey] = S[listName][0]?.id;
+      save(); rerender(); refreshLight();
+    }
+  });
+}
+listHandlers("#lodgingList", "lodging", "selL", "L", renderLodging);
+listHandlers("#transList", "transport", "selT", "T", renderTransport);
+$("#addL").onclick = () => { const l = { id: uid(), name: "New Airbnb", url: "", nightly: 300, cleaning: 100, service: 100, tax: 12, sleeps: 8 };
+  S.lodging.push(l); if (!S.selL) S.selL = l.id; save(); renderLodging(); refreshLight(); $(`[data-id="${l.id}"] [data-k=name]`).select(); };
+$("#addT").onclick = () => { const t = { id: uid(), type: "van", name: "New transportation", ...TDEF.van };
+  S.transport.push(t); if (!S.selT) S.selT = t.id; save(); renderTransport(); refreshLight(); $(`[data-id="${t.id}"] [data-k=name]`).select(); };
+$("#matrix").addEventListener("click", e => {
+  const b = e.target.closest(".cell"); if (!b) return;
+  S.selL = b.dataset.l; S.selT = b.dataset.t; save(); renderLodging(); renderTransport(); refreshLight();
+});
+
+// jobs filters
+$("#q").addEventListener("input", e => { F.q = e.target.value; renderJobs(); });
+$("#fArea").onchange = e => { F.area = e.target.value; renderJobs(); };
+$("#fWhen").onchange = e => { F.when = e.target.value; renderJobs(); };
+$("#fMonth").onchange = e => { F.month = e.target.value; renderJobs(); };
+$("#fSort").onchange = e => { F.sort = e.target.value; renderJobs(); };
+$("#fFew").onchange = e => { F.few = e.target.checked; renderJobs(); };
+$("#catChips").addEventListener("click", e => { const b = e.target.closest("[data-cat]"); if (!b) return; F.cat = b.dataset.cat; renderCatChips(); renderJobs(); });
+
+function stepHandler(e) {
+  const b = e.target.closest("[data-step]"); if (!b) return;
+  const id = b.closest("[data-id]").dataset.id;
+  S.plan[id] = Math.max(0, Math.min(12, (S.plan[id] || 0) + +b.dataset.step));
+  if (!S.plan[id]) delete S.plan[id];
+  save(); renderJobs(); renderPlan(); renderSummary();
+}
+$("#jobList").addEventListener("click", e => {
+  stepHandler(e);
+  if (e.target.matches("[data-edit]")) { e.preventDefault(); openJob(e.target.closest("[data-id]").dataset.id); }
+});
+$("#planList").addEventListener("click", stepHandler);
+$("#addJob").onclick = () => openJob(null);
+
+// job dialog
+function openJob(id) {
+  const j = id ? S.jobs.find(x => x.id === id) : { title: "", cat: CATS[0], rate: 15, hours: 4, tips: 0, group: false, payout: 0, crew: 1, area: "near", when: ["weekend"], months: null, how: "", query: "", desc: "" };
+  const f = $("#jobForm");
+  f.innerHTML = `
+    <h2>${id ? "Edit job" : "Add a job / fundraiser"}</h2>
+    <div class="grid" style="margin-top:10px">
+      <label class="f" style="grid-column:1/-1">Title<input type="text" name="title" required value="${esc(j.title)}"></label>
+      <label class="f">Category<select name="cat">${CATS.map(c => `<option ${c === j.cat ? "selected" : ""}>${esc(c)}</option>`).join("")}</select></label>
+      <label class="f">Area<select name="area">${Object.entries(AREA).map(([k, v]) => `<option value="${k}" ${k === j.area ? "selected" : ""}>${v}</option>`).join("")}</select></label>
+      <label class="f" style="grid-column:1/-1;flex-direction:row;align-items:center;gap:8px"><input type="checkbox" name="group" ${j.group ? "checked" : ""}> Team effort (one payout split among a crew)</label>
+      <label class="f">Hourly rate ($)<input type="number" step="any" min="0" name="rate" value="${j.rate}"></label>
+      <label class="f">Hours per shift<input type="number" step="any" min="0.5" name="hours" value="${j.hours}"></label>
+      <label class="f">Avg tips per shift ($)<input type="number" step="any" min="0" name="tips" value="${j.tips}"></label>
+      <label class="f">Team payout ($)<input type="number" step="any" min="0" name="payout" value="${j.payout}"></label>
+      <label class="f">Crew size<input type="number" min="1" name="crew" value="${j.crew}"></label>
+    </div>
+    <p class="hint" style="margin-top:10px">When</p>
+    <div class="mchips">${Object.entries(WHEN).map(([k, v]) => `<label><input type="checkbox" name="when" value="${k}" ${j.when.includes(k) ? "checked" : ""}>${v}</label>`).join("")}</div>
+    <p class="hint" style="margin-top:10px">Months available (none checked = year-round)</p>
+    <div class="mchips">${MONTHS.map((m, i) => `<label><input type="checkbox" name="mo" value="${i + 1}" ${j.months && j.months.includes(i + 1) ? "checked" : ""}>${m}</label>`).join("")}</div>
+    <label class="f" style="margin-top:10px">Description<textarea name="desc" rows="2">${esc(j.desc)}</textarea></label>
+    <label class="f" style="margin-top:8px">Where to find it / contact<textarea name="how" rows="2">${esc(j.how)}</textarea></label>
+    <label class="f" style="margin-top:8px">Search words for the Indeed/Handshake/Craigslist links<input type="text" name="query" value="${esc(j.query)}"></label>
+    <div class="row" style="margin-top:14px;justify-content:space-between">
+      <div>${id ? '<button type="button" class="btn danger" id="jobDel">Delete</button>' : ""}</div>
+      <div class="row"><button type="button" class="btn" id="jobCancel">Cancel</button><button type="submit" class="btn pri" value="ok">Save</button></div>
+    </div>`;
+  $("#jobCancel").onclick = () => $("#jobDlg").close();
+  if (id) $("#jobDel").onclick = () => { if (!confirm("Delete this job?")) return; S.jobs = S.jobs.filter(x => x.id !== id); delete S.plan[id]; save(); $("#jobDlg").close(); refreshLight(); };
+  f.onsubmit = ev => {
+    if (ev.submitter?.value !== "ok") return;
+    const d = new FormData(f), mo = d.getAll("mo").map(Number);
+    const out = { title: d.get("title").trim(), cat: d.get("cat"), area: d.get("area"), group: d.has("group"),
+      rate: num(d.get("rate")), hours: Math.max(.5, num(d.get("hours"))), tips: num(d.get("tips")), payout: num(d.get("payout")), crew: Math.max(1, num(d.get("crew"))),
+      when: d.getAll("when"), months: mo.length && mo.length < 12 ? mo : null, desc: d.get("desc"), how: d.get("how"), query: d.get("query").trim() };
+    if (!out.when.length) out.when = ["weekday"];
+    if (id) Object.assign(S.jobs.find(x => x.id === id), out); else S.jobs.push({ id: uid(), ...out });
+    save(); refreshLight();
+  };
+  $("#jobDlg").showModal();
+}
+
+// plan actions
+function summaryText() {
+  const ms = monthsList(), per = ms.reduce((s, m) => s + monthEarn(m.cal), 0), g = goal();
+  const lines = [`FSU Weightlifting — ${S.trip.dest || "trip"} fundraising plan`,
+    `Trip: ${selL()?.name || "—"} + ${selT()?.name || "—"} = ${usd(tripTotal())} (${usd(tripTotal() / Math.max(1, num(S.team.people)))}/person)`,
+    `Goal: ${usd(g)} · ${S.team.people} lifters · ${ms.length} months (${ms[0].label}–${ms[ms.length - 1].label}) · need ${usd(neededPerMonth(), 2)}/student/month`,
+    `Monthly shifts per student:`, ...planJobs().map(j => `  • ${S.plan[j.id]}× ${j.title} (${usd(earn(j))}/shift)`),
+    `Each student raises ${usd(per)}; team raises ${usd(plannedTotal())} vs goal ${usd(g)}.`];
+  return lines.join("\n");
+}
+$("#copyBtn").onclick = async () => {
+  try { await navigator.clipboard.writeText(summaryText()); $("#copyMsg").textContent = "Copied! Paste it into your group chat."; }
+  catch (e) { prompt("Copy this summary:", summaryText()); }
+};
+$("#printBtn").onclick = () => window.print();
+$("#exportBtn").onclick = () => {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(S, null, 2)], { type: "application/json" }));
+  a.download = "fsu-lifting-budget.json"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+$("#importBtn").onclick = () => $("#importFile").click();
+$("#importFile").onchange = async e => {
+  try {
+    const d = JSON.parse(await e.target.files[0].text());
+    if (!d.team || !d.jobs || !d.lodging || !d.transport) throw 0;
+    S = d; save(); renderAll(); $("#copyMsg").textContent = "Backup loaded.";
+  } catch (err) { alert("That file doesn't look like a budget backup."); }
+  e.target.value = "";
+};
+$("#resetBtn").onclick = () => { if (confirm("Reset everything back to the starting sample data? This can't be undone.")) { S = defaults(); save(); renderAll(); } };
+
+renderAll();
+</script>
+</body>
+</html>
