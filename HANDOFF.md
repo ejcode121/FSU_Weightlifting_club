@@ -115,3 +115,6 @@ Checked on airbnb.com via Claude in Chrome on Oct 11 2026: Richmond, Apr 13–16
 - Removed every estimated payout, crew size, hourly rate and generic "any day" gig. Events keep only values read from organizer pages (date, time slot, venue, requirements, sign-up route). Pay shows "None listed" until the team types a confirmed payout and crew size on the event card; only confirmed payouts count toward the goal.
 - Dropped Market Days (no organizer program found) and the marathon expo entry (race site says "Saturday Feb 7", a Sunday; noted on the race-day card instead).
 - Instawork shifts (exact pay/date/time) are meant to be read from the user's iPhone Mirroring app via computer use; not done yet.
+
+## Two events per month (v6)
+EVTS now holds 24 sourced Tallahassee events, Oct 2026 to Mar 2027, at least 2 per month (test_planner checks this). Sources: Gulf Winds race calendars (GW, GW26), Volunteer Local, Highland Games, MLK parade page. No listing publishes pay. Open items: SWAC date (Oct 26 vs 27), MLK time, Highland Games shifts, marathon expo date.
