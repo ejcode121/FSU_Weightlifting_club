@@ -118,3 +118,6 @@ Checked on airbnb.com via Claude in Chrome on Oct 11 2026: Richmond, Apr 13–16
 
 ## Two events per month (v6)
 EVTS now holds 24 sourced Tallahassee events, Oct 2026 to Mar 2027, at least 2 per month (test_planner checks this). Sources: Gulf Winds race calendars (GW, GW26), Volunteer Local, Highland Games, MLK parade page. No listing publishes pay. Open items: SWAC date (Oct 26 vs 27), MLK time, Highland Games shifts, marathon expo date.
+
+## Paid-only calendar (v7)
+Volunteer events removed. EVTS = 37 rows: 34 FSU home basketball games at the Tucker Center (dates/tip-offs from seminoles.com; men's times official, women's not yet announced) tied to the standing Oak View Group "Guest Services Event Staff" posting ($15.50/hr, individual hire, evergreen), plus 3 football games for Aramark concessions (pay not found). Coverage: Nov-Feb have 2+ each; Oct has 1 (Oct 31), Mar has 1 (Mar 6). Team size confirmed 18.
