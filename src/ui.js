@@ -2,7 +2,7 @@
 /* ================= UI ================= */
 const ico = (id, cls = "") => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-${id}"/></svg>`;
 const usdK = n => Math.abs(n) >= 1000 ? `$${+(n / 1000).toFixed(Math.abs(n) >= 10000 ? 1 : 2)}K` : usd(n, n % 1 ? 2 : 0);
-const CAT_ICO = { "Race & Meet Crews": "pin", "Game Day & Concessions": "ticket", "Team Events": "people", "Moving & Labor": "box", "Yard & Home": "home",
+const CAT_ICO = { "Race & Meet Crews": "pin", "Game Day & Concessions": "ticket", "Festivals & Markets": "people", "Team Events": "people", "Moving & Labor": "box", "Yard & Home": "home",
   "Coaching & Tutoring": "book", "On-demand Gigs": "bag" };
 const T_ICO = { van: "van", bus: "bus", flight: "plane", cars: "cars", perperson: "ticket" };
 const EARLY = { fee: 145, date: new Date(2027, 2, 4) };
@@ -48,20 +48,20 @@ function heroHTML(mode) {
       <div><dt><i class="ghost"></i>Goal</dt><dd>${usd(g)}</dd></div>
       <div><dt><i class="${gap >= 0 && raised ? "ok" : "gap"}"></i>${gap >= 0 && raised ? "Cushion" : "Still to raise"}</dt><dd class="${cls}">${usd(Math.abs(raised ? gap : g))}</dd></div>
     </dl>
-    ${raised === 0 ? `<div class="hero-cta"><button class="btn pri" type="button" data-act="suggest">${ico("spark")}Suggest a plan</button><button class="btn" type="button" data-act="goto-jobs">${ico("search")}Find shifts</button></div>` : ""}`;
+    ${raised === 0 ? `<div class="hero-cta"><button class="btn pri" type="button" data-act="goto-jobs">${ico("search")}Open the work calendar</button></div>` : ""}`;
 }
 function renderHeroes() {
   const g = goal(), raised = plannedTotal(), gap = raised - g;
   $("#heroTrip").innerHTML = heroHTML("trip");
   heroFirst = false;
   $("#heroPlan").innerHTML = heroHTML("plan");
-  const st = raised >= g && g > 0 ? ["ok", "On track"] : raised === 0 ? ["warn", "No shifts yet"] : ["bad", `Short ${usd(-gap)}`];
+  const st = raised >= g && g > 0 ? ["ok", "On track"] : raised === 0 ? ["warn", "Nothing signed up"] : ["bad", `Short ${usd(-gap)}`];
   $("#mini").innerHTML = `<b>${usd(raised)}</b><span class="of">of ${usd(g)}</span><span class="st ${st[0]}">${st[1]}</span>`;
   $("#loadFill").style.width = Math.min(100, g ? raised / g * 100 : 0) + "%";
 }
 function renderSetupFacts() {
-  const p = num(S.team.people), mo = num(S.team.months);
-  $("#setupFacts").innerHTML = [[p, "lifters"], [mo, "months to raise"], [usd(goal()), S.team.goalMode === "trip" ? "goal, from the trip" : "goal"], [usd(neededPerMonth(), 2), "each, every month"]]
+  const p = num(S.team.people);
+  $("#setupFacts").innerHTML = [[p, "lifters"], [usd(goal()), S.team.goalMode === "trip" ? "goal, from the trip" : "goal"], [usd(perLifter(), 2), "per lifter"]]
     .map(([a, b]) => `<div class="sf"><b>${a}</b><span>${b}</span></div>`).join("");
 }
 
@@ -206,148 +206,95 @@ function renderMatrix() {
   $("#matrix").innerHTML = `<table class="mx"><thead>${head}</thead><tbody>${rows}</tbody></table>`;
 }
 
-/* ---------------- jobs tab ---------------- */
-const F = { q: "", cat: "", area: "", when: "", month: "", sort: "earn", few: false };
-const hourly = j => earn(j) / Math.max(.5, num(j.hours));
-function renderCatChips() {
-  $("#catChips").innerHTML = ["All", ...CATS].map(c => `<button class="cat" type="button" aria-pressed="${(c === "All" ? "" : c) === F.cat}" data-cat="${c === "All" ? "" : esc(c)}">${ico(CAT_ICO[c] || "plan")}${esc(c)}</button>`).join("");
+/* ---------------- jobs tab: calendar ---------------- */
+// Window: today through 2 weeks before the meet (Apr 15, 2027).
+const WIN = { from: "2026-10-11", to: "2027-04-01" };
+const CAL = { y: 2026, m: 9, sel: "" };
+const dated = () => S.jobs.filter(j => j.on);
+const undated = () => S.jobs.filter(j => !j.on);
+const timeOf = j => j.time || "Time to be confirmed";
+function fmtTop(j) { return j.group ? `${usd(j.payout)} ÷ ${j.crew}` : `${usd(j.rate)}/hr × ${j.hours}h${j.tips ? ` + ${usd(j.tips)} tips` : ""}`; }
+function eventCard(j, withDate) {
+  const e = earn(j), on = !!S.plan[j.id];
+  return `<article class="job ${on ? "inplan" : ""}" data-id="${j.id}">
+    <div class="job-top"><span class="cat-ico">${ico(CAT_ICO[j.cat] || "plan")}</span>
+      <div><h3>${esc(j.title)}</h3><div class="cn">${esc(j.cat)}</div></div>
+      <div class="job-pay"><b>${usd(e)}</b><small>${j.group ? "each, est." : "per shift"}</small></div></div>
+    <dl class="ev">
+      ${j.on ? `<div><dt>Date</dt><dd>${esc(dayLabel(j.on))}</dd></div><div><dt>Time slot</dt><dd>${esc(timeOf(j))}</dd></div>` : ""}
+      ${j.group ? `<div><dt>Crew</dt><dd>${j.crew} people · ${usd(j.payout)} team total (est.)</dd></div>` : `<div><dt>Pay</dt><dd>${esc(fmtTop(j))}</dd></div>`}
+      ${j.how ? `<div><dt>How to sign up</dt><dd>${esc(j.how)}</dd></div>` : ""}
+    </dl>
+    ${j.desc ? `<p class="desc">${esc(j.desc)}</p>` : ""}
+    <div class="links">${j.url ? `<a href="${esc(j.url)}" target="_blank" rel="noopener">Sign-up page</a>` : ""}${searchLinks(j)}<button type="button" class="btn ghost sm" data-edit style="min-height:32px;padding:2px 0">${ico("edit")}Edit</button></div>
+    ${j.group ? `<div class="job-foot"><span class="need"><span>${on ? "Counted toward your goal" : "Not counted yet"}</span></span>
+      <button type="button" class="btn ${on ? "" : "pri"} sm" data-signed aria-pressed="${on}">${ico(on ? "check" : "plus")}${on ? "Signed up" : "Mark signed up"}</button></div>` : ""}
+  </article>`;
 }
-function renderMonthSelect() {
-  $("#fMonth").innerHTML = `<option value="">Any month</option>` + monthsList().map(m => `<option value="${m.cal}" ${String(m.cal) === F.month ? "selected" : ""}>${m.label}</option>`).join("");
-}
-function jobMatches(j) {
-  if (F.cat && j.cat !== F.cat) return false;
-  if (F.area && j.area !== F.area && !(F.area === "near" && j.area === "campus") && !(F.area === "city")) return false;
-  if (F.when && !j.when.includes(F.when)) return false;
-  if (F.month && !inSeason(j, +F.month)) return false;
-  if (F.few && !(earn(j) > 0 && Math.ceil(target() / earn(j)) <= 2)) return false;
-  if (F.q) {
-    const hay = `${j.title} ${j.cat} ${j.desc} ${j.how} ${j.when.join(" ")} ${j.area === "campus" ? "campus on-campus fsu" : j.area}`.toLowerCase();
-    if (!F.q.toLowerCase().split(/\s+/).filter(Boolean).every(w => hay.includes(w))) return false;
-  }
-  return true;
-}
-const AREA = { campus: "On campus", near: "Within ~3 mi", city: "Around Tallahassee" };
-const WHEN = { weekday: "Weekdays", evening: "Evenings", weekend: "Weekends" };
-const seasonText = j => (!j.months || j.months.length === 12) ? "Year-round" : j.months.map(m => MONTHS[m - 1]).join(", ");
-const enc = encodeURIComponent;
-function searchLinks(j) {
+const searchLinks = j => {
   if (!j.query) return "";
-  const q = enc(j.query);
+  const q = encodeURIComponent(j.query);
   return `<a href="https://www.indeed.com/jobs?q=${q}&l=Tallahassee%2C+FL&radius=10" target="_blank" rel="noopener">Indeed</a>
-    <a href="https://fsu.joinhandshake.com/stu/postings?query=${q}" target="_blank" rel="noopener">Handshake</a>
     <a href="https://tallahassee.craigslist.org/search/ggg?query=${q}" target="_blank" rel="noopener">Craigslist gigs</a>`;
+};
+const ymd = (y, m, d) => `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+function renderCalendar() {
+  const first = new Date(CAL.y, CAL.m, 1), dim = new Date(CAL.y, CAL.m + 1, 0).getDate(), lead = first.getDay();
+  const by = {}; dated().forEach(j => (by[j.on] = by[j.on] || []).push(j));
+  const today = iso(new Date());
+  $("#calTitle").textContent = first.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  const idx = CAL.y * 12 + CAL.m, lo = 2026 * 12 + 9, hi = 2027 * 12 + 3;
+  $("#calPrev").disabled = idx <= lo; $("#calNext").disabled = idx >= hi;
+  let cells = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => `<div class="cw" aria-hidden="true">${d}</div>`).join("") + '<div class="cd blank"></div>'.repeat(lead);
+  for (let d = 1; d <= dim; d++) {
+    const k = ymd(CAL.y, CAL.m, d), n = (by[k] || []).length, out = k < WIN.from || k > WIN.to, planned = (by[k] || []).filter(j => S.plan[j.id]).length;
+    const lab = `${new Date(k + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}, ${n ? `${n} opportunit${n > 1 ? "ies" : "y"}` : "none"}`;
+    cells += `<button type="button" class="cd ${n ? "has" : ""} ${out ? "out" : ""} ${k === CAL.sel ? "sel" : ""} ${k === today ? "today" : ""}" data-on="${k}" aria-label="${lab}" aria-pressed="${k === CAL.sel}"><b>${d}</b>${n ? `<span class="cn-b ${planned ? "done" : ""}">${n}</span>` : ""}</button>`;
+  }
+  $("#calGrid").innerHTML = cells;
 }
-const stepper = n => `<div class="stepper"><button type="button" data-step="-1" aria-label="Fewer shifts">${ico("minus")}</button><output><b>${n}</b><small>/ month</small></output><button type="button" data-step="1" aria-label="More shifts">${ico("plus")}</button></div>`;
+function renderDayPanel() {
+  const el = $("#dayPanel"), list = dated().filter(j => j.on === CAL.sel);
+  if (!CAL.sel) { el.innerHTML = `<p class="hint">Pick a marked day to see sign-ups.</p>`; return; }
+  const head = `<h3 class="day-h">${esc(dayLabel(CAL.sel))}</h3>`;
+  el.innerHTML = head + (list.length ? `<div class="jobs one">${list.map(j => eventCard(j)).join("")}</div>` : `<p class="hint">Nothing listed for this day.</p>`);
+}
 function renderJobs() {
-  const list = S.jobs.filter(jobMatches).sort((a, b) =>
-    F.sort === "soon" ? (a.on || "9999").localeCompare(b.on || "9999") : F.sort === "hourly" ? hourly(b) - hourly(a) : F.sort === "short" ? num(a.hours) - num(b.hours) : earn(b) - earn(a));
-  $("#resCount").textContent = `${list.length} of ${S.jobs.length} jobs`;
-  if (!list.length) { $("#jobList").innerHTML = `<div class="empty"><b>No jobs</b><button class="btn" type="button" id="clearF">Clear filters</button></div>`; return; }
-  $("#jobList").innerHTML = list.map(j => {
-    const e = earn(j), n = S.plan[j.id] || 0, need = e > 0 ? Math.ceil(target() / e) : 0, pips = Math.min(need, 8);
-    return `<article class="job ${n ? "inplan" : ""}" data-id="${j.id}">
-      <div class="job-top"><span class="cat-ico">${ico(CAT_ICO[j.cat] || "plan")}</span>
-        <div><h3>${esc(j.title)}</h3><div class="cn">${esc(j.cat)}</div></div>
-        <div class="job-pay"><b>${usd(e)}</b><small>per shift</small></div></div>
-      <p class="brk">${j.group ? `${usd(j.payout)} ÷ ${j.crew}` : `${usd(j.rate)}/hr × ${j.hours}h${j.tips ? ` + ${usd(j.tips)} tips` : ""}`}</p>
-      <div class="facts">${j.group ? `<span class="tag">Team effort</span>` : ""}${n ? `<span class="tag in">In your plan</span>` : ""}
-        <span class="chip">${ico("pin")}${AREA[j.area]}</span>${j.when.map(w => `<span class="chip">${WHEN[w]}</span>`).join("")}<span class="chip">${j.date ? esc(j.date) : seasonText(j)}</span>${j.group ? `<span class="chip">${j.crew} people</span>` : ""}</div>
-      <div class="links">${j.url ? `<a href="${esc(j.url)}" target="_blank" rel="noopener">Event page</a>` : ""}${searchLinks(j)}<button type="button" class="btn ghost sm" data-edit style="min-height:32px;padding:2px 0">${ico("edit")}Edit</button></div>
-      <div class="job-foot">
-        <div class="need"><div class="pips" aria-hidden="true">${Array.from({ length: pips }, (_, i) => `<i class="pip ${i < n ? "on" : ""}"></i>`).join("")}</div>
-          <span>${need ? `${need} a month to reach ${usd(target())}` : "No pay set"}</span></div>
-        ${stepper(n)}
-      </div></article>`;
-  }).join("");
+  const list = undated().sort((a, b) => (b.group - a.group) || a.title.localeCompare(b.title));
+  $("#resCount").textContent = `${dated().length} dated opportunities · ${list.length} you can do any day`;
+  $("#jobList").innerHTML = list.map(j => eventCard(j)).join("");
+  renderCalendar(); renderDayPanel();
 }
+function firstUpcoming() { const d = iso(new Date()); const k = dated().map(j => j.on).filter(o => o >= d).sort()[0] || dated().map(j => j.on).sort()[0] || ""; return k; }
+function selectDay(k) { CAL.sel = k; if (k) { CAL.y = +k.slice(0, 4); CAL.m = +k.slice(5, 7) - 1; } renderCalendar(); renderDayPanel(); }
 
 /* ---------------- plan tab ---------------- */
 function renderPlanList() {
   const pj = planJobs();
   $("#planList").innerHTML = pj.length ? pj.map(j => `
     <div class="shift-row" data-id="${j.id}">
-      <div><b>${esc(j.title)}</b><small>${usd(earn(j))} per shift</small></div>
-      <div class="sub">${usd(S.plan[j.id] * earn(j))}</div>
-      <div style="grid-column:1/-1">${stepper(S.plan[j.id])}</div>
+      <div><b>${esc(j.title)}</b><small>${j.on ? `${esc(dayLabel(j.on))} · ${esc(timeOf(j))}` : "Any day"}</small></div>
+      <div class="sub">${usd(j.group ? j.payout : earn(j) * num(S.team.people))}</div>
+      <div style="grid-column:1/-1"><button type="button" class="btn sm" data-unplan>${ico("x")}Remove</button></div>
     </div>`).join("")
-    : `<div class="empty"><b>No shifts</b><button class="btn pri" type="button" data-act="suggest">${ico("spark")}Suggest a plan</button> <button class="btn" type="button" data-act="goto-jobs">${ico("search")}Find shifts</button></div>`;
-}
-function startDate() {
-  const [y, m] = (S.team.start || "").split("-").map(Number);
-  const b = (y && m) ? new Date(y, m - 1, 1) : new Date();
-  return new Date(b.getFullYear(), b.getMonth(), 1);
-}
-function renderCum() {
-  const ms = monthsList(), p = num(S.team.people), g = goal(), N = ms.length;
-  const t0 = startDate(), t1 = new Date(t0.getFullYear(), t0.getMonth() + N, 1);
-  const te = ms.map(m => monthEarn(m.cal) * p);
-  const cumAt = d => { let s = 0; for (let i = 0; i < N; i++) { const a = new Date(t0.getFullYear(), t0.getMonth() + i, 1), b = new Date(t0.getFullYear(), t0.getMonth() + i + 1, 1);
-    if (d >= b) s += te[i]; else if (d > a) s += te[i] * (d - a) / (b - a); } return s; };
-  const total = cumAt(t1), top = Math.max(g, total) * 1.1 || 1;
-  const step = [100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000, 20000, 25000].find(s => top / s <= 5) || 50000;
-  const ymax = Math.ceil(top / step) * step;
-  const W = 640, H = 300, L = 54, R = 14, T = 24, B = 34, pw = W - L - R, ph = H - T - B;
-  const X = d => L + (d - t0) / (t1 - t0) * pw, Y = v => T + ph - v / ymax * ph;
-  let grid = "", i = 0;
-  for (let v = 0; v <= ymax; v += step) { grid += `<line class="grid-l" x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${L - 8}" y="${Y(v) + 4}" text-anchor="end">${usdK(v)}</text>`; i++; }
-  const pts = [[t0, 0], ...ms.map((m, k) => [new Date(t0.getFullYear(), t0.getMonth() + k + 1, 1), cumAt(new Date(t0.getFullYear(), t0.getMonth() + k + 1, 1))])];
-  const path = pts.map(([d, v], k) => `${k ? "L" : "M"}${X(d).toFixed(1)} ${Y(v).toFixed(1)}`).join("");
-  const area = `${path}L${X(t1).toFixed(1)} ${Y(0)}L${L} ${Y(0)}Z`;
-  const xl = ms.map((m, k) => { const a = new Date(t0.getFullYear(), t0.getMonth() + k, 1), b = new Date(t0.getFullYear(), t0.getMonth() + k + 1, 1);
-    return `<text x="${((X(a) + X(b)) / 2).toFixed(1)}" y="${H - 12}" text-anchor="middle">${m.label.slice(0, 3)}</text>`; }).join("");
-  const meetD = S.trip.meetDay ? new Date(S.trip.meetDay + "T12:00:00") : new Date(2027, 3, 15);
-  const mark = (d, label, dy) => (d > t0 && d < t1) ? `<line class="mk" x1="${X(d)}" x2="${X(d)}" y1="${T}" y2="${T + ph}"/><text x="${X(d) - 5}" y="${T + 12 + dy}" text-anchor="end" class="lbl-strong">${label}</text>` : "";
-  const svg = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Team total raised over time, ending at ${usd(total)} against a ${usd(g)} goal">
-    ${grid}<line class="axis" x1="${L}" x2="${W - R}" y1="${Y(0)}" y2="${Y(0)}"/>
-    <line class="goal-l" x1="${L}" x2="${W - R}" y1="${Y(g)}" y2="${Y(g)}"/><text x="${L + 6}" y="${Y(g) - 7}" class="lbl-strong">Goal ${usd(g)}</text>
-    <path class="area" d="${area}"/><path class="line" d="${path}"/>${mark(EARLY.date, "Early-bird entry closes", 14)}${mark(meetD, "Meet", 0)}${xl}</svg>`;
-  $("#cumChart").innerHTML = svg;
-}
-function renderMonthChart() {
-  const ms = monthsList(), t = target(), W = 640, H = 260, L = 12, R = 12, T = 30, B = 30, ph = H - T - B;
-  const vals = ms.map(m => monthEarn(m.cal)), max = Math.max(t * 1.35, ...vals, 1);
-  const bw = (W - L - R) / ms.length, Y = v => T + ph - v / max * ph;
-  const cols = ms.map((m, i) => { const v = vals[i], x = L + i * bw + bw * .16, w = bw * .68, h = Math.max(v ? 2 : 0, v / max * ph);
-    return `<rect class="col ${v >= t ? "" : "low"}" x="${x}" y="${T + ph - h}" width="${w}" height="${h}" rx="4"/>
-      <text x="${x + w / 2}" y="${T + ph - h + 18}" text-anchor="middle" style="fill:#fff;font-weight:700">${v && h > 26 ? usd(v) : ""}</text>
-      <text x="${x + w / 2}" y="${H - 10}" text-anchor="middle">${m.label.slice(0, 3)}</text>`; }).join("");
-  $("#monthChart").innerHTML = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Earnings per lifter each month against a ${usd(t)} target">
-    <line class="axis" x1="${L}" x2="${W - R}" y1="${T + ph}" y2="${T + ph}"/>${cols}
-    <line class="tgt" x1="${L}" x2="${W - R}" y1="${Y(t)}" y2="${Y(t)}"/><text x="${W - R}" y="${T - 12}" text-anchor="end" class="lbl-strong">Target ${usd(t)}</text></svg>`;
+    : `<div class="empty"><b>Nothing signed up</b><button class="btn pri" type="button" data-act="goto-jobs">${ico("search")}Open the work calendar</button></div>`;
 }
 function renderResult() {
-  const ms = monthsList(), g = goal(), raised = plannedTotal(), per = ms.reduce((s, m) => s + monthEarn(m.cal), 0), gap = raised - g, nd = neededPerMonth(), p = Math.max(1, num(S.team.people));
+  const g = goal(), raised = plannedTotal(), gap = raised - g;
   const cls = raised === 0 ? "" : gap >= 0 ? "ok" : "bad";
-  $("#result").innerHTML = `<div class="verdict ${cls}"><b>${raised === 0 ? "No shifts" : gap >= 0 ? `Covered, ${usd(gap)} to spare` : `${usd(-gap)} short`}</b>
-    ${raised === 0 ? "" : `${usd(per)} per lifter, ${usd(per / ms.length, 2)} a month`}</div>`;
+  $("#result").innerHTML = `<div class="verdict ${cls}"><b>${raised === 0 ? "Nothing signed up" : gap >= 0 ? `Covered, ${usd(gap)} to spare` : `${usd(-gap)} short`}</b>
+    ${raised === 0 ? "" : `${usd(raised)} from ${planJobs().length} signed-up ${planJobs().length > 1 ? "events" : "event"}`}</div>`;
 }
-function renderPlan() { renderPlanList(); renderResult(); renderCum(); renderMonthChart(); }
-
-function suggestPlan() {
-  const ms = monthsList(), nd = neededPerMonth() * 1.05;
-  const ok = S.jobs.filter(j => !j.group && earn(j) > 0 && ms.every(m => inSeason(j, m.cal)));
-  if (!ok.length || nd <= 0) { toast("No jobs to suggest."); return; }
-  const plan = {}; let rem = nd, count = 0;
-  while (rem > 0 && count < 4) {
-    const fits = ok.filter(j => earn(j) >= rem).sort((a, b) => earn(a) - earn(b) || hourly(b) - hourly(a))[0];
-    const pick = fits || ok.slice().sort((a, b) => earn(b) - earn(a) || hourly(b) - hourly(a))[0];
-    plan[pick.id] = (plan[pick.id] || 0) + 1; rem -= earn(pick); count++;
-  }
-  S.plan = plan; save(); renderJobs(); renderPlan(); renderHeroes(); renderSetupFacts();
-  const names = Object.keys(plan).map(id => S.jobs.find(j => j.id === id).title);
-  toast(`Plan set: ${names.join(", ")}`);
-}
+function renderPlan() { renderPlanList(); renderResult(); }
 
 /* ---------------- orchestration ---------------- */
 function refreshLight() {
   renderMaps(); renderLiveTrip(); updateLodging(); updateTransport(); updateLines(); renderTimeline(); renderPicks(); renderMatrix();
-  renderHeroes(); renderSetupFacts(); renderJobs(); renderPlan(); renderMonthSelectKeep();
+  renderHeroes(); renderSetupFacts(); renderJobs(); renderPlan();
 }
-function renderMonthSelectKeep() { renderMonthSelect(); F.month = $("#fMonth").value; }
 function renderAll() {
   renderLive(); renderMaps(); bindStatic(); renderLodging(); renderTransport(); updateLines(); renderTimeline(); renderPicks(); renderMatrix();
-  renderCatChips(); renderMonthSelect(); renderJobs(); renderPlan(); renderHeroes(); renderSetupFacts();
+  selectDay(CAL.sel || firstUpcoming()); renderJobs(); renderPlan(); renderHeroes(); renderSetupFacts();
 }
 
 /* ---------------- events ---------------- */
@@ -359,7 +306,6 @@ function go(tab) {
 $$("nav.tabs button").forEach(b => b.addEventListener("click", () => go(b.dataset.tab)));
 document.addEventListener("click", e => {
   const a = e.target.closest("[data-act]"); if (!a) return;
-  if (a.dataset.act === "suggest") { suggestPlan(); }
   if (a.dataset.act === "goto-jobs") go("jobs");
 });
 function onTop(e) {
@@ -434,85 +380,76 @@ $("#picks").addEventListener("click", chooseCombo);
 $("#lSort").onchange = e => { S.lsort = e.target.value; save(); renderLodging(); renderMatrix(); };
 $("#lMin").onchange = e => { S.lmin = e.target.value; save(); renderLodging(); renderMatrix(); };
 
-// jobs filters
-$("#q").addEventListener("input", e => { F.q = e.target.value; renderJobs(); });
-$("#fArea").onchange = e => { F.area = e.target.value; renderJobs(); };
-$("#fWhen").onchange = e => { F.when = e.target.value; renderJobs(); };
-$("#fMonth").onchange = e => { F.month = e.target.value; renderJobs(); };
-$("#fSort").onchange = e => { F.sort = e.target.value; renderJobs(); };
-$("#fFew").onchange = e => { F.few = e.target.checked; renderJobs(); };
-$("#catChips").addEventListener("click", e => { const b = e.target.closest("[data-cat]"); if (!b) return; F.cat = b.dataset.cat; keepFocus(() => { renderCatChips(); renderJobs(); }); });
-
-function stepHandler(e) {
-  const b = e.target.closest("[data-step]"); if (!b) return;
+// calendar
+$("#calPrev").onclick = () => { const d = new Date(CAL.y, CAL.m - 1, 1); CAL.y = d.getFullYear(); CAL.m = d.getMonth(); renderCalendar(); };
+$("#calNext").onclick = () => { const d = new Date(CAL.y, CAL.m + 1, 1); CAL.y = d.getFullYear(); CAL.m = d.getMonth(); renderCalendar(); };
+$("#calGrid").addEventListener("click", e => { const b = e.target.closest("[data-on]"); if (!b) return; selectDay(b.dataset.on); const n = $(`#calGrid [data-on="${b.dataset.on}"]`); if (n) n.focus(); $("#dayPanel").scrollIntoView({ block: "nearest", behavior: "smooth" }); });
+function signHandler(e) {
+  const b = e.target.closest("[data-signed], [data-unplan]"); if (!b) return false;
   const id = b.closest("[data-id]").dataset.id;
-  S.plan[id] = Math.max(0, Math.min(12, (S.plan[id] || 0) + +b.dataset.step));
-  if (!S.plan[id]) delete S.plan[id];
+  if (S.plan[id]) delete S.plan[id]; else S.plan[id] = 1;
   save(); keepFocus(() => { renderJobs(); renderPlan(); }); renderHeroes(); renderSetupFacts();
+  return true;
 }
-$("#jobList").addEventListener("click", e => {
-  stepHandler(e);
-  if (e.target.closest("#clearF")) { Object.assign(F, { q: "", cat: "", area: "", when: "", month: "", few: false }); $("#q").value = ""; $("#fArea").value = $("#fWhen").value = $("#fMonth").value = ""; $("#fFew").checked = false; renderCatChips(); renderJobs(); }
+function jobClicks(e) {
+  if (signHandler(e)) return;
   const ed = e.target.closest("[data-edit]"); if (ed) { e.preventDefault(); openJob(ed.closest("[data-id]").dataset.id); }
-});
-$("#planList").addEventListener("click", stepHandler);
+}
+$("#jobList").addEventListener("click", jobClicks);
+$("#dayPanel").addEventListener("click", jobClicks);
+$("#planList").addEventListener("click", signHandler);
 $("#addJob").onclick = () => openJob(null);
 
 // job dialog
 function openJob(id) {
-  const j = id ? S.jobs.find(x => x.id === id) : { title: "", cat: CATS[0], rate: 15, hours: 4, tips: 0, group: false, payout: 0, crew: 1, on: "", date: "", url: "", area: "near", when: ["weekend"], months: null, how: "", query: "", desc: "" };
+  const j = id ? S.jobs.find(x => x.id === id) : { title: "", cat: CATS[0], rate: 15, hours: 4, tips: 0, group: true, payout: 0, crew: 5, on: CAL.sel || "", time: "", url: "", area: "city", when: [], months: null, how: "", query: "", desc: "" };
   const f = $("#jobForm");
   f.innerHTML = `
-    <h2>${id ? "Edit job" : "Add a job"}</h2>
+    <h2>${id ? "Edit opportunity" : "Add an opportunity"}</h2>
     <div class="grid">
       <label class="field" style="grid-column:1/-1">Title<input type="text" name="title" required value="${esc(j.title)}"></label>
       <label class="field">Category<select name="cat">${CATS.map(c => `<option ${c === j.cat ? "selected" : ""}>${esc(c)}</option>`).join("")}</select></label>
-      <label class="field">Area<select name="area">${Object.entries(AREA).map(([k, v]) => `<option value="${k}" ${k === j.area ? "selected" : ""}>${v}</option>`).join("")}</select></label>
+      <label class="field">Date (blank means any day)<input type="date" name="on" value="${esc(j.on)}"></label>
+      <label class="field" style="grid-column:1/-1">Time slot<input type="text" name="time" placeholder="e.g. 8:00 AM–12:00 PM" value="${esc(j.time)}"></label>
       <label class="switch-row" style="grid-column:1/-1"><input type="checkbox" class="switch" name="group" ${j.group ? "checked" : ""}><span>Team effort<small>One payout split among a crew</small></span></label>
-      <label class="field">Hourly rate ($)<input type="number" step="any" min="0" name="rate" value="${j.rate}"></label>
-      <label class="field">Hours per shift<input type="number" step="any" min="0.5" name="hours" value="${j.hours}"></label>
-      <label class="field">Average tips per shift ($)<input type="number" step="any" min="0" name="tips" value="${j.tips}"></label>
       <label class="field">Team payout ($)<input type="number" step="any" min="0" name="payout" value="${j.payout}"></label>
       <label class="field">Crew size<input type="number" min="1" name="crew" value="${j.crew}"></label>
+      <label class="field">Hourly rate ($)<input type="number" step="any" min="0" name="rate" value="${j.rate}"></label>
+      <label class="field">Hours<input type="number" step="any" min="0.5" name="hours" value="${j.hours || 1}"></label>
+      <label class="field">Tips ($)<input type="number" step="any" min="0" name="tips" value="${j.tips}"></label>
     </div>
-    <p class="sub-h">When you can work</p>
-    <div class="mchips">${Object.entries(WHEN).map(([k, v]) => `<label><input type="checkbox" name="when" value="${k}" ${j.when.includes(k) ? "checked" : ""}>${v}</label>`).join("")}</div>
-    <p class="sub-h">Months available (none checked means year-round)</p>
-    <div class="mchips">${MONTHS.map((m, i) => `<label><input type="checkbox" name="mo" value="${i + 1}" ${j.months && j.months.includes(i + 1) ? "checked" : ""}>${m}</label>`).join("")}</div>
     <div class="grid" style="margin-top:14px;grid-template-columns:1fr">
       <label class="field">Description<textarea name="desc" rows="2">${esc(j.desc)}</textarea></label>
-      <label class="field">Where to find it, or who to contact<textarea name="how" rows="2">${esc(j.how)}</textarea></label>
-      <label class="field">Event date label (optional)<input type="text" name="date" value="${esc(j.date)}"></label>
-      <label class="field">Event link (optional)<input type="url" name="url" value="${esc(j.url)}"></label>
-      <label class="field">Search words for the Indeed, Handshake and Craigslist links<input type="text" name="query" value="${esc(j.query)}"></label>
+      <label class="field">How to sign up<textarea name="how" rows="2">${esc(j.how)}</textarea></label>
+      <label class="field">Sign-up link<input type="url" name="url" value="${esc(j.url)}"></label>
+      <label class="field">Search words for the Indeed and Craigslist links<input type="text" name="query" value="${esc(j.query)}"></label>
     </div>
     <div class="row" style="margin-top:18px;justify-content:space-between">
-      <div>${id ? '<button type="button" class="btn danger" id="jobDel">Delete job</button>' : ""}</div>
-      <div class="row"><button type="button" class="btn" id="jobCancel">Cancel</button><button type="submit" class="btn pri" value="ok">Save job</button></div>
+      <div>${id ? '<button type="button" class="btn danger" id="jobDel">Delete</button>' : ""}</div>
+      <div class="row"><button type="button" class="btn" id="jobCancel">Cancel</button><button type="submit" class="btn pri" value="ok">Save</button></div>
     </div>`;
   $("#jobCancel").onclick = () => $("#jobDlg").close();
-  if (id) $("#jobDel").onclick = () => { if (!confirm("Delete this job?")) return; S.jobs = S.jobs.filter(x => x.id !== id); delete S.plan[id]; save(); $("#jobDlg").close(); refreshLight(); toast("Job deleted."); };
+  if (id) $("#jobDel").onclick = () => { if (!confirm("Delete this opportunity?")) return; S.jobs = S.jobs.filter(x => x.id !== id); delete S.plan[id]; save(); $("#jobDlg").close(); refreshLight(); toast("Deleted."); };
   f.onsubmit = ev => {
     if (ev.submitter?.value !== "ok") return;
-    const d = new FormData(f), mo = d.getAll("mo").map(Number);
-    const out = { title: d.get("title").trim(), cat: d.get("cat"), area: d.get("area"), group: d.has("group"),
+    const d = new FormData(f);
+    const out = { title: d.get("title").trim(), cat: d.get("cat"), group: d.has("group"), on: d.get("on") || "", time: d.get("time").trim(), url: d.get("url").trim(),
       rate: num(d.get("rate")), hours: Math.max(.5, num(d.get("hours"))), tips: num(d.get("tips")), payout: num(d.get("payout")), crew: Math.max(1, num(d.get("crew"))),
-      when: d.getAll("when"), months: mo.length && mo.length < 12 ? mo : null, desc: d.get("desc"), how: d.get("how"), query: d.get("query").trim(), date: d.get("date").trim(), url: d.get("url").trim() };
-    if (!out.when.length) out.when = ["weekday"];
-    if (id) Object.assign(S.jobs.find(x => x.id === id), out); else S.jobs.push({ id: uid(), ...out });
-    save(); refreshLight(); toast(id ? "Job saved." : "Job added.");
+      desc: d.get("desc"), how: d.get("how"), query: d.get("query").trim() };
+    if (id) Object.assign(S.jobs.find(x => x.id === id), out); else S.jobs.push({ id: uid(), area: "city", when: [], months: null, ...out });
+    save(); if (out.on) selectDay(out.on); refreshLight(); toast(id ? "Saved." : "Added.");
   };
   $("#jobDlg").showModal();
 }
 
 // plan actions
 function summaryText() {
-  const ms = monthsList(), per = ms.reduce((s, m) => s + monthEarn(m.cal), 0), g = goal();
+  const g = goal();
   return [`FSU Weightlifting: ${S.trip.dest || "trip"} fundraising plan`,
     `Trip: ${selL()?.name || "none"} + ${selT()?.name || "none"}, ${selN()} nights${selRed() ? " (red-eye home)" : ""} = ${usd(tripTotal())} (${usd(tripTotal() / Math.max(1, num(S.team.people)))} per person)`,
-    `Goal: ${usd(g)} for ${S.team.people} lifters over ${ms.length} months (${ms[0].label} to ${ms[ms.length - 1].label}). Need ${usd(neededPerMonth(), 2)} per lifter per month.`,
-    `Monthly shifts per lifter:`, ...planJobs().map(j => `  • ${S.plan[j.id]}× ${j.title} (${usd(earn(j))} a shift)`),
-    `Each lifter raises ${usd(per)}. The team raises ${usd(plannedTotal())} against a ${usd(g)} goal.`].join("\n");
+    `Goal: ${usd(g)} for ${S.team.people} lifters (${usd(perLifter(), 2)} each).`,
+    `Signed-up events:`, ...planJobs().map(j => `  • ${j.on ? dayLabel(j.on) + ", " + timeOf(j) : "Any day"}: ${j.title} (${usd(j.group ? j.payout : earn(j) * num(S.team.people))})`),
+    `The team raises ${usd(plannedTotal())} against a ${usd(g)} goal.`].join("\n");
 }
 $("#copyBtn").onclick = async () => {
   try { await navigator.clipboard.writeText(summaryText()); toast("Summary copied."); }

@@ -92,9 +92,6 @@
       <div class="setup-body">
         <div class="grid">
           <label class="field">Lifters<input type="number" min="1" inputmode="numeric" data-team="people"></label>
-          <label class="field">Months<input type="number" min="1" max="24" inputmode="numeric" data-team="months"></label>
-          <label class="field">Start month<input type="month" data-team="start"></label>
-          <label class="field">Monthly target ($)<input type="number" min="0" step="5" inputmode="decimal" data-team="target"></label>
         </div>
         <div class="row">
           <label class="row" style="gap:8px"><input type="radio" name="gm" value="fixed" data-gm> Fixed goal</label>
@@ -172,28 +169,28 @@
 <!-- ================= FIND WORK ================= -->
 <section class="panel" id="tab-jobs" role="tabpanel" aria-label="Find work">
   <div class="wrap">
-    <section class="block first" id="liveJobs" aria-label="Live this week" style="padding-top:24px"></section>
-    <section class="block" aria-labelledby="h-jobs" style="padding-top:24px">
+    <section class="block first" aria-labelledby="h-jobs" style="padding-top:24px">
       <div class="sec-head">
         <div>
-          <h2 class="sec-title" id="h-jobs">Jobs</h2>
+          <h2 class="sec-title" id="h-jobs">Work calendar</h2>
         </div>
-        <button class="btn pri" id="addJob" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Add a job</button>
+        <button class="btn pri" id="addJob" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Add an opportunity</button>
       </div>
-      <div class="finder">
-        <div class="search"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-search"/></svg><input class="input" type="search" id="q" placeholder="Search jobs" aria-label="Search jobs"></div>
-        <div class="chips" id="catChips" role="group" aria-label="Job categories"></div>
-        <div class="filter-row">
-          <label class="field">Area<select id="fArea"><option value="">Anywhere</option><option value="campus">On campus</option><option value="near">Within 3 mi</option><option value="city">Tallahassee</option></select></label>
-          <label class="field">When<select id="fWhen"><option value="">Any time</option><option value="weekday">Weekdays</option><option value="evening">Evenings</option><option value="weekend">Weekends</option></select></label>
-          <label class="field">Month<select id="fMonth"></select></label>
-          <label class="field">Sort by<select id="fSort"><option value="earn">Most per shift</option><option value="soon">Soonest</option><option value="hourly">Highest hourly</option><option value="short">Shortest shift</option></select></label>
+      <div class="cal">
+        <div class="cal-head">
+          <button type="button" class="icon-btn" id="calPrev" aria-label="Previous month"><svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="transform:rotate(90deg)"><use href="#i-chev"/></svg></button>
+          <h3 id="calTitle" aria-live="polite"></h3>
+          <button type="button" class="icon-btn" id="calNext" aria-label="Next month"><svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="transform:rotate(-90deg)"><use href="#i-chev"/></svg></button>
         </div>
-        <label class="switch-row"><input type="checkbox" class="switch" id="fFew"><span>2 shifts or fewer reach target</span></label>
-        <p class="hint" id="resCount" role="status"></p>
+        <div class="cal-grid" id="calGrid"></div>
       </div>
+      <div id="dayPanel" aria-live="polite"></div>
+      <h3 class="live-h" style="margin-top:34px">Any day</h3>
+      <p class="hint" id="resCount" role="status"></p>
       <div class="jobs" id="jobList"></div>
     </section>
+    <section class="block" id="liveJobs" aria-label="Live this week" style="padding-top:24px"></section>
+
   </div>
 </section>
 
@@ -205,9 +202,8 @@
       <div>
         <section class="block first" aria-labelledby="h-shifts">
           <div class="sec-head"><div>
-            <h2 class="sec-title" id="h-shifts">Monthly shifts per lifter</h2>
-          </div>
-          <button class="btn" id="suggestBtn" type="button" data-act="suggest"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-spark"/></svg>Suggest a plan</button></div>
+            <h2 class="sec-title" id="h-shifts">Signed up</h2>
+          </div></div>
           <div id="planList"></div>
         </section>
         <section class="block" aria-labelledby="h-verdict">
@@ -221,20 +217,6 @@
             <button class="btn danger" id="resetBtn" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-reset"/></svg>Reset everything</button>
             <input type="file" id="importFile" accept="application/json" hidden>
           </div>
-        </section>
-      </div>
-      <div>
-        <section class="block first" aria-labelledby="h-cum">
-          <div class="sec-head"><div>
-            <h2 class="sec-title" id="h-cum">Team total</h2>
-          </div></div>
-          <div id="cumChart"></div>
-        </section>
-        <section class="block" aria-labelledby="h-mon">
-          <div class="sec-head"><div>
-            <h2 class="sec-title" id="h-mon">Per lifter by month</h2>
-          </div></div>
-          <div id="monthChart"></div>
         </section>
       </div>
     </div>

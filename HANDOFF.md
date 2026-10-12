@@ -103,3 +103,10 @@ Checked on airbnb.com via Claude in Chrome on Oct 11 2026: Richmond, Apr 13–16
 - Sources checked in Chrome: FHSAA XC State Finals Nov 20 (Apalachee Regional Park), NCAA South Regional XC (mid-Nov, date unconfirmed), Turkey Trot Nov 26, Tallahassee Marathon Feb 7 2027, FSU home football concession stands (Volunteer Leon / Idealist), Instawork Tallahassee.
 - Springtime Tallahassee (Apr 2–3 2027) falls inside the 2-week pre-meet window, so it is excluded.
 - Group payouts are ESTIMATES (organizers do not publish them); confirm each rate in writing. Whole-team crews use crew=16; 5-person crews also listed.
+
+## Work calendar (replaces monthly shift tracking)
+- Find work is now a month calendar (Oct 2026 – Apr 2027). Click a day for exact-date opportunities with time slot, crew, estimated pay, sign-up note and link. Undated fundraisers and solo gigs sit under "Any day".
+- Data: `EVTS` in src/core.js (13 dated events, each with exact date + time slot). SEED_VER=4 migrates saved data and keeps jobs the user added.
+- Plan tab: "Mark signed up" on an event counts its team payout toward the goal. No per-month counts, targets or charts.
+- Verified Oct 11 2026: FSU home games Oct 31 (Clemson), Nov 21 (NC State), Nov 27 (Florida, 3:30 PM); Visit Tallahassee sign-ups for SWAC Oct 26, NCAA South Region Nov 13, AAU Nationals Dec 5 (shift lists need a free account); FHSAA finals Nov 20; Turkey Trot Nov 22 festival + Nov 26 race; Winter Festival/Jingle Bell Run Dec 5; Market Days Dec 5–6; Marathon Feb 7 (all-volunteer) with expo Feb 6.
+- Unconfirmed: kickoff times Oct 31 and Nov 21, race times for cross-country days, expo day (site says "Saturday Feb 7"), all payouts (estimates).
