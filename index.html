@@ -442,6 +442,12 @@ dl.ev>div{display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px;font-si
 dl.ev dt{color:var(--ink-3);font-weight:560}
 dl.ev dd{margin:0;color:var(--ink)}
 
+.pay-in{flex-wrap:wrap;align-items:flex-end}
+.pay-in label{display:grid;gap:4px;font-size:.78rem;color:var(--ink-3);font-weight:560}
+.pay-in input{width:9.5em;min-height:40px;border:1px solid var(--line-2);border-radius:10px;padding:6px 10px;background:var(--surface);color:var(--ink);font:inherit}
+.pay-in label:nth-of-type(2) input{width:5em}
+.pay-in .btn{margin-left:auto}
+
 </style>
 </head>
 <body>
@@ -619,9 +625,9 @@ dl.ev dd{margin:0;color:var(--ink)}
         <div class="cal-grid" id="calGrid"></div>
       </div>
       <div id="dayPanel" aria-live="polite"></div>
-      <h3 class="live-h" style="margin-top:34px">Any day</h3>
+      <div id="anyDay" hidden><h3 class="live-h" style="margin-top:34px">No date</h3>
       <p class="hint" id="resCount" role="status"></p>
-      <div class="jobs" id="jobList"></div>
+      <div class="jobs" id="jobList"></div></div>
     </section>
     <section class="block" id="liveJobs" aria-label="Live this week" style="padding-top:24px"></section>
 
@@ -678,62 +684,32 @@ const usd = (n, d = 0) => (isFinite(n) ? n : 0).toLocaleString("en-US", { style:
 
 /* ---------------- default data ---------------- */
 // [title, cat, rate, hours, tips, area, when[], months|null, how-to-find, search query, description]
-const SEED_JOBS = [
- // ---- group fundraisers you can run any day (no fixed date) ----
- ["Weekend 5K / 10K race-day crew","Race & Meet Crews",0,4,0,"city",["weekend"],null,"Check local race calendars (Tallahassee Runners Club, RunSignUp) and offer a 5-person setup/marshal crew. Typical group donation is $150–300 per race.","5k race volunteers","5-person crew. Course marking, finish line, water tables."],
- ["Pop-up concession stand at a Saturday event","Game Day & Concessions",0,6,0,"city",["weekend"],null,"Rent a tent and sell drinks and snacks at a tailgate, craft market, or youth tournament. Get the venue's permission and a Florida temporary food permit first.","pop up food vendor tallahassee","Crew of 5. Your own stand: you keep the profit after supplies and fees. Estimate only."],
- ["Semester move-out hauling crew","Moving & Labor",0,5,0,"near",["weekend","weekday"],null,"Post in FSU housing Facebook groups and offer a 5-person load-and-haul crew for finals week and the days after.","student move out help","Crew of 5, about $110 each for a half-day."],
- ["Holiday-lights installation crew","Yard & Home",0,5,0,"city",["weekday","weekend"],null,"Decorating companies hire day crews in Oct–Nov; offer a 5-person crew.","holiday lights installer","Crew of 5. Hanging lights and decorations; ladders and teamwork."],
- ["Restaurant “spirit night”","Team Events",0,3,0,"near",["evening"],null,"Ask a local restaurant to donate 15–20% of sales for one night; promote it on social.","","Whole team. A busy night brings in $300–500."],
- ["Community Olympic-lifting clinic","Team Events",0,2,0,"campus",["weekend"],null,"Host a $20-per-person technique clinic at your gym; invite alumni, local gyms, high-school teams.","","Whole team. 30 attendees × $20 ≈ $600."],
- ["Team car wash","Team Events",0,4,0,"near",["weekend"],null,"Ask a parking-lot owner (bank, auto parts store) for permission.","","Whole team. Roughly $400–600 for a good Saturday."],
- // ---- solo freelance work, any day ----
- ["Referee / official: youth sports (per game)","On-demand Gigs",30,3,0,"city",["weekend","evening"],null,"City of Tallahassee Parks & Recreation and youth leagues hire per-game officials; take the short certification.","youth sports referee tallahassee","Paid per game, no schedule commitment."],
- ["Event setup & teardown (Instawork shift)","On-demand Gigs",17,5,0,"city",["weekday","evening","weekend"],null,"Sign up on Instawork for Tallahassee. Pick single shifts at venues and events.","event setup crew","Single-shift gigs, no commitment."],
- ["Catering / banquet shift (one event)","On-demand Gigs",15,5,40,"city",["evening","weekend"],null,"Local caterers keep an on-call list of students for single events.","catering server banquet","One event at a time. Hourly plus tips."],
- ["Moving help (load & haul)","Moving & Labor",22,4,10,"city",["weekday","weekend"],null,"Local moving companies; Craigslist and Facebook gigs.","moving helper","Paid per job."],
- ["Junk removal / hauling job","Moving & Labor",20,4,0,"city",["weekday","weekend"],null,"Junk-removal franchises and Craigslist/Facebook haul-away requests.","junk removal helper","Lift, load, dump. Per job."],
- ["Leaf & gutter cleanup job","Yard & Home",18,3,0,"city",["weekend"],null,"Neighborhood groups and Nextdoor; flyers in nearby neighborhoods.","gutter leaf cleanup","Per-yard jobs for homeowners."],
- ["Mobile car wash / detailing","Yard & Home",20,3,15,"city",["weekend"],null,"Advertise in apartment complexes and Facebook groups.","car detailing","Your own mini-business."],
- ["Private tutoring session","Coaching & Tutoring",25,2,0,"near",["weekday","evening"],null,"Private-tutor boards, high schools and families; no employer.","tutor math","Pay per session."],
- ["Weightlifting coaching session (private clients)","Coaching & Tutoring",30,1.5,0,"near",["weekday","evening"],null,"Offer technique sessions to local gyms, youth athletes and parents; no employer.","weightlifting coach","Pay per session."],
- ["Pet sitting / dog walking","On-demand Gigs",18,2,0,"near",["weekday","weekend"],null,"Rover or Wag-style apps and apartment bulletin boards.","pet sitter dog walker","Single bookings."],
-];
-const GROUP = { "Weekend 5K / 10K race-day crew":[250,5], "Pop-up concession stand at a Saturday event":[400,5], "Semester move-out hauling crew":[550,5], "Holiday-lights installation crew":[600,5],
-  "Restaurant “spirit night”":[400,16], "Community Olympic-lifting clinic":[600,16], "Team car wash":[500,16] };
-// Dated events, checked Oct 11 2026. [title, category, date, time slot, crew, est. team payout, what you do, pay / how to sign up, link]
-// Payouts are estimates: none of these organizers publish a group rate, so confirm it in writing.
+// Dated events, every field pulled from the organizer's page (checked Oct 11 2026).
+// [title, category, date, time slot, what it is, pay, how to sign up, link]
+// No organizer publishes a group payout, so none is stored: enter the confirmed amount on the event card.
 const VL = "https://visittallahassee.volunteerlocal.com/volunteer/?id=";
+const STAND = "Volunteer Leon lists the stand (Rise Institute, 850-766-3106). That listing says “Individuals Only”, so ask whether a full group can work it.";
 const EVTS = [
- ["SWAC Championships: course crew","Race & Meet Crews","2026-10-26","Shift times are posted inside the sign-up",16,800,"Conference cross-country championships at Apalachee Regional Park, 7550 Apalachee Pkwy. Course marshals, setup, results runners.","Sign up through Visit Tallahassee (free account). Ask about a club donation for the full crew.",VL+"114428"],
- ["FSU vs Clemson: concession stand","Game Day & Concessions","2026-10-31","Kickoff TBA. Crews meet at Gate B (earlier games: about 4.5 h before kickoff)",10,900,"Run a concession stand at Doak Campbell Stadium. 17+, black pants and black shoes.","Nonprofit stand lead: Volunteer Leon, 850-766-3106, or the Idealist listing. Ask to bring a full crew and what it pays.","https://www.idealist.org/en/volunteer-opportunity/908f5e680edb44ca806ce4ac2abf669a-volunteers-needed-for-fsu-home-football-games-this-fall-2026-society-for-charity-tallahassee"],
- ["NCAA South Region cross country","Race & Meet Crews","2026-11-13","Morning races. Shift times are posted inside the sign-up",16,1000,"FSU hosts the NCAA Division I South Region championships at Apalachee Regional Park. Marshals, fencing, course crew.","Sign up through Visit Tallahassee (free account). Ask FSU Cross Country about a paid crew.",VL+"114434"],
- ["FHSAA cross country state finals","Race & Meet Crews","2026-11-20","All four classes race this day. Times TBA",16,1000,"State finals at Apalachee Regional Park. Marshals, lap counters, finish chute, results runners.","Contact the timing company (PrimeTime Timing) or Visit Tallahassee Sports to offer the full crew.","https://fhsaa.com/sports/cross-country"],
- ["FSU vs NC State: concession stand","Game Day & Concessions","2026-11-21","Kickoff TBA. Crews meet at Gate B (earlier games: about 4.5 h before kickoff)",10,900,"Homecoming game. Run a concession stand at Doak Campbell Stadium. 17+, black pants and black shoes.","Nonprofit stand lead: Volunteer Leon, 850-766-3106. Ask to bring a full crew and what it pays.","https://leoncountyfl.galaxydigital.com"],
- ["Turkey Trot festival: expo setup","Race & Meet Crews","2026-11-22","1:30–5:00 PM at Goodwood Museum & Gardens",5,300,"Set up and run the packet and festival area the weekend before the race.","Email the race director at tallyturkeytrot.com and offer a 5-person crew.","https://www.tallyturkeytrot.com"],
- ["Turkey Trot: course marshals and water stops","Race & Meet Crews","2026-11-26","8:00 AM–12:00 PM race",16,700,"Marshal the 15K/10K/5K/1-mile courses and staff water stops.","Email the race director at tallyturkeytrot.com and offer the full crew for a donation.","https://www.tallyturkeytrot.com"],
- ["FSU vs Florida: concession stand","Game Day & Concessions","2026-11-27","3:30 PM kickoff. Crews typically meet at Gate B about 11:00 AM",5,500,"Senior Day. Smaller crews are easier to place on a stand. 17+, black pants and black shoes.","Nonprofit stand lead: Volunteer Leon, 850-766-3106.","https://leoncountyfl.galaxydigital.com"],
- ["AAU National Championships: course crew","Race & Meet Crews","2026-12-05","Shift times are posted inside the sign-up",16,1000,"National youth cross-country championships at Apalachee Regional Park.","Sign up through Visit Tallahassee (free account). Ask about a club donation for the full crew.",VL+"117119"],
- ["Winter Festival and Jingle Bell Run: marshals","Festivals & Markets","2026-12-05","3:00–10:00 PM festival. Jingle Bell Run 6:15 PM, parade 7:10 PM",5,300,"City of Tallahassee winter festival. Run course marshals and street crew for the 6:15 PM run and the 7:10 PM parade.","Call City of Tallahassee Parks, Recreation & Neighborhood Affairs and offer a 5-person crew.","https://www.talgov.com/parks/winter_festival"],
- ["Market Days: vendor load-out crew","Festivals & Markets","2026-12-06","Show closes 5:00 PM. Load-out after close",5,300,"Help vendors break down booths and carry loads at the North Florida Fairgrounds.","Ask vendors directly on site or in the Market Days vendor Facebook group; no organizer program found.","https://marketdays.org"],
- ["Tallahassee Marathon: expo and packet pickup","Race & Meet Crews","2027-02-06","12:00–4:00 PM at Turnbull Conference Center (the race site lists this as Saturday Feb 7; Feb 7 is a Sunday)",5,300,"Hand out bibs and shirts, run expo tables, set up and tear down.","The marathon is all-volunteer (Gulf Winds Track Club). Ask the race director about a club donation.","https://www.tallahasseemarathon.com/Race/tlhmarathon/Page/Packet-Pick-up-and-Expo"],
- ["Tallahassee Marathon: aid stations and course crew","Race & Meet Crews","2027-02-07","7:30 AM–1:30 PM. Race-day packet pickup opens 6:00 AM at the courthouse",16,1000,"Staff aid stations and marshal the course. The finish is on Madison Street.","The marathon is all-volunteer (Gulf Winds Track Club). Ask the race director about a club donation for the full crew.","https://www.tallahasseemarathon.com"]
+ ["SWAC Championships volunteers","Race & Meet Crews","2026-10-26","Not published. Shift times appear inside the sign-up","Volunteer sign-up for the SWAC Championships at Apalachee Regional Park, 7550 Apalachee Pkwy.","None listed","Open the sign-up on Visit Tallahassee (VolunteerLocal). Viewing shifts needs a free account.",VL+"114428"],
+ ["FSU vs Clemson: concession stand","Game Day & Concessions","2026-10-31","Kickoff not announced yet. Arrival time not published","Work a concession stand at Doak Campbell Stadium. Listed requirements: 17 or older, black pants, black shoes.","None listed",STAND,"https://leoncountyfl.galaxydigital.com"],
+ ["NCAA South Region cross country volunteers","Race & Meet Crews","2026-11-13","Not published. Shift times appear inside the sign-up","Volunteer sign-up for the NCAA Division I South Region championships at Apalachee Regional Park, hosted by Florida State.","None listed","Open the sign-up on Visit Tallahassee (VolunteerLocal). Viewing shifts needs a free account.",VL+"114434"],
+ ["FHSAA cross country state finals","Race & Meet Crews","2026-11-20","Not published","State finals at Apalachee Regional Park. All four classes race this day.","None listed","No volunteer sign-up found. Meet page lists PrimeTime Timing as the host.","https://fhsaa.com"],
+ ["FSU vs NC State: concession stand","Game Day & Concessions","2026-11-21","Kickoff not announced yet. Arrival time not published","Homecoming game. Work a concession stand at Doak Campbell Stadium. Listed requirements: 17 or older, black pants, black shoes.","None listed",STAND,"https://leoncountyfl.galaxydigital.com"],
+ ["Turkey Trot festival","Race & Meet Crews","2026-11-22","1:30–5:00 PM","Turkey Trot Festival at Goodwood Museum & Gardens.","None listed","No volunteer sign-up found. Contact the race through its website.","https://www.tallyturkeytrot.com"],
+ ["Turkey Trot race","Race & Meet Crews","2026-11-26","8:00 AM–12:00 PM","15K, 10K, 5K and 1-mile races.","None listed","No volunteer sign-up found. Contact the race through its website.","https://www.tallyturkeytrot.com"],
+ ["FSU vs Florida: concession stand","Game Day & Concessions","2026-11-27","Kickoff 3:30 PM. Arrival time not published","Senior Day. Work a concession stand at Doak Campbell Stadium. Listed requirements: 17 or older, black pants, black shoes.","None listed",STAND,"https://leoncountyfl.galaxydigital.com"],
+ ["AAU National Championships volunteers","Race & Meet Crews","2026-12-05","Not published. Shift times appear inside the sign-up","Volunteer sign-up for the AAU National Championships at Apalachee Regional Park.","None listed","Open the sign-up on Visit Tallahassee (VolunteerLocal). Viewing shifts needs a free account.",VL+"117119"],
+ ["Winter Festival and Jingle Bell Run","Festivals & Markets","2026-12-05","Festival 3:00–10:00 PM. Jingle Bell Run 6:15 PM. Parade 7:10 PM","City of Tallahassee Winter Festival, with the Jingle Bell Run and a parade.","None listed","No volunteer sign-up found. Contact City of Tallahassee Parks, Recreation & Neighborhood Affairs.","https://www.talgov.com/parks/winter_festival"],
+ ["Tallahassee Marathon and Half Marathon","Race & Meet Crews","2027-02-07","Race 7:30 AM–1:30 PM. Race-day packet pickup from 6:00 AM at 301 S. Monroe St.","The race site's expo page says expo and packet pickup are 12–4 PM on “Saturday, Feb. 7”, but Feb 7, 2027 is a Sunday. Confirm that date with the race.","None listed. The race says it is an all-volunteer event run by Gulf Winds Track Club","No volunteer sign-up found on the race site.","https://www.tallahasseemarathon.com"]
 ];
 const dayLabel = on => { const d = new Date(on + "T12:00:00"); return isNaN(d) ? "" : d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" }); };
-const SEED_VER = 4;
-const OLD_TITLES = new Set(["Apartment move-out cleaning", "Babysitting / nanny", "Bartender / barback (21+)", "Campus Rec official / lifeguard", "Catering / banquet shift (one event)", "Catering server / banquet", "Community Olympic-lifting clinic", "Event setup & teardown (Instawork shift)", "Event setup & teardown crew", "FHSAA cross-country state finals: course marshals", "FSU home football: concession stand (5-person crew)", "FSU home football: concession stand (NC State)", "Festival & market vendor help", "Food / grocery delivery", "Holiday-lights installation", "Holiday-lights installation crew", "Junk removal / hauling", "Junk removal / hauling job", "Leaf & gutter cleanup", "Leaf & gutter cleanup job", "Mobile car wash / detailing", "Moving help (load & haul)", "NCAA South Regional cross country: course crew", "Paid research studies", "Personal training (cert. required)", "Pet sitting / dog walking", "Pop-up concession stand at a Saturday event", "Private tutoring session", "Referee / official: youth sports (per game)", "Restaurant host / busser", "Restaurant “spirit night”", "Seasonal retail & gift wrap", "Semester move-out hauling crew", "Stadium / arena event staff", "Stadium concession stand (org payout)", "Summer orientation staff", "Tallahassee Marathon: aid stations & course crew", "Tallahassee Marathon: expo & packet pickup crew", "Team car wash", "Turkey Trot: course marshals & water stops", "Tutoring (math, SAT/ACT, chem)", "Warehouse / package sorting", "Weekend 5K / 10K race-day crew", "Weightlifting coaching session (private clients)", "Yard work & landscaping", "Yard work & landscaping job", "Youth strength / sports coach"]);
+const SEED_VER = 5;
+const OLD_TITLES = new Set(["AAU National Championships: course crew", "Apartment move-out cleaning", "Babysitting / nanny", "Bartender / barback (21+)", "Campus Rec official / lifeguard", "Catering / banquet shift (one event)", "Catering server / banquet", "Community Olympic-lifting clinic", "Event setup & teardown (Instawork shift)", "Event setup & teardown crew", "FHSAA cross country state finals", "FHSAA cross-country state finals: course marshals", "FSU home football: concession stand (5-person crew)", "FSU home football: concession stand (NC State)", "FSU vs Clemson: concession stand", "FSU vs Florida: concession stand", "FSU vs NC State: concession stand", "Festival & market vendor help", "Food / grocery delivery", "Holiday-lights installation", "Holiday-lights installation crew", "Junk removal / hauling", "Junk removal / hauling job", "Leaf & gutter cleanup", "Leaf & gutter cleanup job", "Market Days: vendor load-out crew", "Mobile car wash / detailing", "Moving help (load & haul)", "NCAA South Region cross country", "NCAA South Regional cross country: course crew", "Paid research studies", "Personal training (cert. required)", "Pet sitting / dog walking", "Pop-up concession stand at a Saturday event", "Private tutoring session", "Referee / official: youth sports (per game)", "Restaurant host / busser", "Restaurant “spirit night”", "SWAC Championships: course crew", "Seasonal retail & gift wrap", "Semester move-out hauling crew", "Stadium / arena event staff", "Stadium concession stand (org payout)", "Summer orientation staff", "Tallahassee Marathon: aid stations & course crew", "Tallahassee Marathon: aid stations and course crew", "Tallahassee Marathon: expo & packet pickup crew", "Tallahassee Marathon: expo and packet pickup", "Team car wash", "Turkey Trot festival: expo setup", "Turkey Trot: course marshals & water stops", "Turkey Trot: course marshals and water stops", "Tutoring (math, SAT/ACT, chem)", "Warehouse / package sorting", "Weekend 5K / 10K race-day crew", "Weightlifting coaching session (private clients)", "Winter Festival and Jingle Bell Run: marshals", "Yard work & landscaping", "Yard work & landscaping job", "Youth strength / sports coach"]);
 
 function seedJobs() {
-  const dated = EVTS.map(e => ({ id: uid(), title: e[0], cat: e[1], on: e[2], time: e[3], group: true, crew: e[4], payout: e[5], desc: e[6], how: e[7], url: e[8],
-    rate: 0, hours: 0, tips: 0, area: "city", when: [], months: null, query: "" }));
-  const any = SEED_JOBS.map(j => {
-    const g = GROUP[j[0]];
-    return { id: uid(), title: j[0], cat: j[1], rate: j[2], hours: j[3], tips: j[4], group: !!g, payout: g ? g[0] : 0, crew: g ? g[1] : 1,
-      area: j[5], when: j[6], months: j[7], how: j[8], query: j[9], desc: j[10], on: "", time: "", url: "" };
-  });
-  return dated.concat(any);
+  return EVTS.map(e => ({ id: uid(), title: e[0], cat: e[1], on: e[2], time: e[3], desc: e[4], pay: e[5], how: e[6], url: e[7],
+    group: true, payout: 0, crew: 0, rate: 0, hours: 0, tips: 0, area: "city", when: [], months: null, query: "" }));
 }
-
 // All dollar figures below are placeholders ("Sample") until the team has real quotes.
 // redeye = may the team leave the night of the meet (one fewer night)? Only with a pro driver or a flight.
 const TDEF = {
@@ -807,10 +783,10 @@ function normalize(s) {
   s.lodging.forEach(l => { if (l.miles === undefined) l.miles = null; if (l.mins === undefined) l.mins = null; });
   if (s.lodging.length && s.lodging.every(l => /^Sample/.test(l.name) && !l.src)) { s.lodging = researchedLodging(); s.selL = s.lodging[0].id; } // swap the old sample stays for the researched ones
   if (s.jobsV !== SEED_VER) { // swap the old job lists for the dated calendar; keep jobs the user added
-    const custom = s.jobs.filter(j => !OLD_TITLES.has(j.title)).map(j => ({ on: "", time: "", url: "", ...j, cat: CATS.includes(j.cat) ? j.cat : "On-demand Gigs" }));
+    const custom = s.jobs.filter(j => !OLD_TITLES.has(j.title)).map(j => ({ on: "", time: "", url: "", pay: "", ...j, cat: CATS.includes(j.cat) ? j.cat : "On-demand Gigs" }));
     s.jobs = seedJobs().concat(custom); s.plan = {}; s.jobsV = SEED_VER;
   }
-  s.jobs.forEach(j => { if (j.on === undefined) j.on = ""; if (j.time === undefined) j.time = ""; if (j.url === undefined) j.url = ""; });
+  s.jobs.forEach(j => { if (j.pay === undefined) j.pay = ""; if (j.on === undefined) j.on = ""; if (j.time === undefined) j.time = ""; if (j.url === undefined) j.url = ""; });
   s.transport.forEach(t => {
     if (t.type === "van" && t.extra === undefined) { t.extra = Math.max(0, (+t.days || 0) - (+s.trip.nights || 3) - 1); delete t.days; }
     if (t.type === "bus") { if (t.layover === undefined) t.layover = 0; if (t.driverHotel === undefined) t.driverHotel = 0; }
@@ -899,7 +875,7 @@ function scheduleText() {
 const goal = () => S.team.goalMode === "trip" ? tripTotal() : num(S.team.goal);
 const perLifter = () => goal() / Math.max(1, num(S.team.people));
 function earn(j) {
-  return j.group ? num(j.payout) / Math.max(1, num(j.crew)) : num(j.rate) * num(j.hours) + num(j.tips);
+  return j.group ? (num(j.payout) && num(j.crew) ? num(j.payout) / num(j.crew) : 0) : num(j.rate) * num(j.hours) + num(j.tips);
 }
 function planJobs() { return S.jobs.filter(j => S.plan[j.id]).sort((a, b) => (a.on || "9999").localeCompare(b.on || "9999")); }
 function plannedTotal() { return planJobs().reduce((t, j) => t + (j.group ? num(j.payout) : earn(j) * num(S.team.people)), 0); }
@@ -957,7 +933,10 @@ function renderLiveJobs() {
     ["Seminoles schedule", "https://seminoles.com/calendar/"],
     ["Visit Tallahassee events", "https://www.visittallahassee.com/events/"],
     ["Craigslist gigs, newest", "https://tallahassee.craigslist.org/search/ggg?sort=date"],
-    ["Handshake jobs", "https://fsu.joinhandshake.com/stu/postings"]
+    ["Handshake jobs", "https://fsu.joinhandshake.com/stu/postings"],
+    ["Instawork Tallahassee", "https://www.instawork.com/category/tallahassee-city"],
+    ["Volunteer Leon", "https://leoncountyfl.galaxydigital.com"],
+    ["Visit Tallahassee volunteering", "https://visittallahassee.volunteerlocal.com"]
   ];
   const pk = picks.map(j => { const s = q(j.query);
     return `<div class="live-pick"><b>${esc(j.title)}</b><span class="live-pick-links">
@@ -965,7 +944,7 @@ function renderLiveJobs() {
       <a href="https://fsu.joinhandshake.com/stu/postings?query=${s}" target="_blank" rel="noopener">Handshake</a>
       <a href="https://tallahassee.craigslist.org/search/ggg?query=${s}&sort=date" target="_blank" rel="noopener">Craigslist</a></span></div>`; }).join("");
   el.innerHTML = `<div class="sec-head"><h2 class="sec-title">Live this week</h2><span class="stamp">${stamp()}</span></div>
-    <h3 class="live-h">Today's searches</h3><div class="live-picks">${pk}</div>
+    ${pk ? `<h3 class="live-h">Today's searches</h3><div class="live-picks">${pk}</div>` : ""}
     <h3 class="live-h">Sources</h3><div class="live-grid">${src.map(([l, u]) => liveLink(l, u)).join("")}</div>`;
 }
 function renderLive() { renderLiveTrip(); renderLiveJobs(); }
@@ -1412,21 +1391,22 @@ const CAL = { y: 2026, m: 9, sel: "" };
 const dated = () => S.jobs.filter(j => j.on);
 const undated = () => S.jobs.filter(j => !j.on);
 const timeOf = j => j.time || "Time to be confirmed";
-function fmtTop(j) { return j.group ? `${usd(j.payout)} ÷ ${j.crew}` : `${usd(j.rate)}/hr × ${j.hours}h${j.tips ? ` + ${usd(j.tips)} tips` : ""}`; }
-function eventCard(j, withDate) {
-  const e = earn(j), on = !!S.plan[j.id];
+const payText = j => j.group ? (num(j.payout) ? `${usd(j.payout)} confirmed${num(j.crew) ? `, ${usd(j.payout / j.crew, 2)} each for ${j.crew} people` : ""}` : (j.pay || "None listed"))
+  : `${usd(j.rate)}/hr × ${j.hours}h${j.tips ? ` + ${usd(j.tips)} tips` : ""}`;
+function eventCard(j) {
+  const on = !!S.plan[j.id];
   return `<article class="job ${on ? "inplan" : ""}" data-id="${j.id}">
     <div class="job-top"><span class="cat-ico">${ico(CAT_ICO[j.cat] || "plan")}</span>
-      <div><h3>${esc(j.title)}</h3><div class="cn">${esc(j.cat)}</div></div>
-      <div class="job-pay"><b>${usd(e)}</b><small>${j.group ? "each, est." : "per shift"}</small></div></div>
+      <div><h3>${esc(j.title)}</h3><div class="cn">${esc(j.cat)}</div></div></div>
     <dl class="ev">
       ${j.on ? `<div><dt>Date</dt><dd>${esc(dayLabel(j.on))}</dd></div><div><dt>Time slot</dt><dd>${esc(timeOf(j))}</dd></div>` : ""}
-      ${j.group ? `<div><dt>Crew</dt><dd>${j.crew} people · ${usd(j.payout)} team total (est.)</dd></div>` : `<div><dt>Pay</dt><dd>${esc(fmtTop(j))}</dd></div>`}
-      ${j.how ? `<div><dt>How to sign up</dt><dd>${esc(j.how)}</dd></div>` : ""}
+      <div><dt>Pay</dt><dd class="pay-dd">${esc(payText(j))}</dd></div>
+      ${j.how ? `<div><dt>Sign-up</dt><dd>${esc(j.how)}</dd></div>` : ""}
     </dl>
     ${j.desc ? `<p class="desc">${esc(j.desc)}</p>` : ""}
-    <div class="links">${j.url ? `<a href="${esc(j.url)}" target="_blank" rel="noopener">Sign-up page</a>` : ""}${searchLinks(j)}<button type="button" class="btn ghost sm" data-edit style="min-height:32px;padding:2px 0">${ico("edit")}Edit</button></div>
-    ${j.group ? `<div class="job-foot"><span class="need"><span>${on ? "Counted toward your goal" : "Not counted yet"}</span></span>
+    <div class="links">${j.url ? `<a href="${esc(j.url)}" target="_blank" rel="noopener">Event page</a>` : ""}${searchLinks(j)}<button type="button" class="btn ghost sm" data-edit style="min-height:32px;padding:2px 0">${ico("edit")}Edit</button></div>
+    ${j.group ? `<div class="job-foot pay-in"><label>Confirmed payout ($)<input type="number" min="0" step="any" inputmode="decimal" data-pay="payout" value="${num(j.payout) || ""}" placeholder="Enter once quoted"></label>
+      <label>Crew<input type="number" min="0" step="1" inputmode="numeric" data-pay="crew" value="${num(j.crew) || ""}"></label>
       <button type="button" class="btn ${on ? "" : "pri"} sm" data-signed aria-pressed="${on}">${ico(on ? "check" : "plus")}${on ? "Signed up" : "Mark signed up"}</button></div>` : ""}
   </article>`;
 }
@@ -1460,7 +1440,8 @@ function renderDayPanel() {
 }
 function renderJobs() {
   const list = undated().sort((a, b) => (b.group - a.group) || a.title.localeCompare(b.title));
-  $("#resCount").textContent = `${dated().length} dated opportunities · ${list.length} you can do any day`;
+  $("#resCount").textContent = `${list.length} without a date`;
+  $("#anyDay").hidden = !list.length;
   $("#jobList").innerHTML = list.map(j => eventCard(j)).join("");
   renderCalendar(); renderDayPanel();
 }
@@ -1473,7 +1454,7 @@ function renderPlanList() {
   $("#planList").innerHTML = pj.length ? pj.map(j => `
     <div class="shift-row" data-id="${j.id}">
       <div><b>${esc(j.title)}</b><small>${j.on ? `${esc(dayLabel(j.on))} · ${esc(timeOf(j))}` : "Any day"}</small></div>
-      <div class="sub">${usd(j.group ? j.payout : earn(j) * num(S.team.people))}</div>
+      <div class="sub">${j.group && !num(j.payout) ? "No payout yet" : usd(j.group ? j.payout : earn(j) * num(S.team.people))}</div>
       <div style="grid-column:1/-1"><button type="button" class="btn sm" data-unplan>${ico("x")}Remove</button></div>
     </div>`).join("")
     : `<div class="empty"><b>Nothing signed up</b><button class="btn pri" type="button" data-act="goto-jobs">${ico("search")}Open the work calendar</button></div>`;
@@ -1482,7 +1463,7 @@ function renderResult() {
   const g = goal(), raised = plannedTotal(), gap = raised - g;
   const cls = raised === 0 ? "" : gap >= 0 ? "ok" : "bad";
   $("#result").innerHTML = `<div class="verdict ${cls}"><b>${raised === 0 ? "Nothing signed up" : gap >= 0 ? `Covered, ${usd(gap)} to spare` : `${usd(-gap)} short`}</b>
-    ${raised === 0 ? "" : `${usd(raised)} from ${planJobs().length} signed-up ${planJobs().length > 1 ? "events" : "event"}`}</div>`;
+    ${raised === 0 ? "" : `${usd(raised)} confirmed from ${planJobs().length} signed-up ${planJobs().length > 1 ? "events" : "event"}`}</div>`;
 }
 function renderPlan() { renderPlanList(); renderResult(); }
 
@@ -1594,6 +1575,13 @@ function jobClicks(e) {
   if (signHandler(e)) return;
   const ed = e.target.closest("[data-edit]"); if (ed) { e.preventDefault(); openJob(ed.closest("[data-id]").dataset.id); }
 }
+function payInput(e) {
+  const i = e.target.closest("[data-pay]"); if (!i) return;
+  const j = S.jobs.find(x => x.id === i.closest("[data-id]").dataset.id); if (!j) return;
+  j[i.dataset.pay] = num(i.value); save(); renderHeroes(); renderSetupFacts(); renderPlan();
+  const dd = i.closest("[data-id]").querySelector(".pay-dd"); if (dd) dd.textContent = payText(j);
+}
+$("#jobList").addEventListener("input", payInput); $("#dayPanel").addEventListener("input", payInput);
 $("#jobList").addEventListener("click", jobClicks);
 $("#dayPanel").addEventListener("click", jobClicks);
 $("#planList").addEventListener("click", signHandler);
@@ -1601,7 +1589,7 @@ $("#addJob").onclick = () => openJob(null);
 
 // job dialog
 function openJob(id) {
-  const j = id ? S.jobs.find(x => x.id === id) : { title: "", cat: CATS[0], rate: 15, hours: 4, tips: 0, group: true, payout: 0, crew: 5, on: CAL.sel || "", time: "", url: "", area: "city", when: [], months: null, how: "", query: "", desc: "" };
+  const j = id ? S.jobs.find(x => x.id === id) : { title: "", cat: CATS[0], rate: 15, hours: 4, tips: 0, group: true, payout: 0, crew: 0, pay: "", on: CAL.sel || "", time: "", url: "", area: "city", when: [], months: null, how: "", query: "", desc: "" };
   const f = $("#jobForm");
   f.innerHTML = `
     <h2>${id ? "Edit opportunity" : "Add an opportunity"}</h2>
@@ -1611,8 +1599,8 @@ function openJob(id) {
       <label class="field">Date (blank means any day)<input type="date" name="on" value="${esc(j.on)}"></label>
       <label class="field" style="grid-column:1/-1">Time slot<input type="text" name="time" placeholder="e.g. 8:00 AM–12:00 PM" value="${esc(j.time)}"></label>
       <label class="switch-row" style="grid-column:1/-1"><input type="checkbox" class="switch" name="group" ${j.group ? "checked" : ""}><span>Team effort<small>One payout split among a crew</small></span></label>
-      <label class="field">Team payout ($)<input type="number" step="any" min="0" name="payout" value="${j.payout}"></label>
-      <label class="field">Crew size<input type="number" min="1" name="crew" value="${j.crew}"></label>
+      <label class="field">Confirmed team payout ($)<input type="number" step="any" min="0" name="payout" value="${j.payout || ""}"></label>
+      <label class="field">Crew size<input type="number" min="0" name="crew" value="${j.crew || ""}"></label>
       <label class="field">Hourly rate ($)<input type="number" step="any" min="0" name="rate" value="${j.rate}"></label>
       <label class="field">Hours<input type="number" step="any" min="0.5" name="hours" value="${j.hours || 1}"></label>
       <label class="field">Tips ($)<input type="number" step="any" min="0" name="tips" value="${j.tips}"></label>
@@ -1633,7 +1621,7 @@ function openJob(id) {
     if (ev.submitter?.value !== "ok") return;
     const d = new FormData(f);
     const out = { title: d.get("title").trim(), cat: d.get("cat"), group: d.has("group"), on: d.get("on") || "", time: d.get("time").trim(), url: d.get("url").trim(),
-      rate: num(d.get("rate")), hours: Math.max(.5, num(d.get("hours"))), tips: num(d.get("tips")), payout: num(d.get("payout")), crew: Math.max(1, num(d.get("crew"))),
+      rate: num(d.get("rate")), hours: Math.max(.5, num(d.get("hours"))), tips: num(d.get("tips")), payout: num(d.get("payout")), crew: Math.max(0, num(d.get("crew"))),
       desc: d.get("desc"), how: d.get("how"), query: d.get("query").trim() };
     if (id) Object.assign(S.jobs.find(x => x.id === id), out); else S.jobs.push({ id: uid(), area: "city", when: [], months: null, ...out });
     save(); if (out.on) selectDay(out.on); refreshLight(); toast(id ? "Saved." : "Added.");
@@ -1647,7 +1635,7 @@ function summaryText() {
   return [`FSU Weightlifting: ${S.trip.dest || "trip"} fundraising plan`,
     `Trip: ${selL()?.name || "none"} + ${selT()?.name || "none"}, ${selN()} nights${selRed() ? " (red-eye home)" : ""} = ${usd(tripTotal())} (${usd(tripTotal() / Math.max(1, num(S.team.people)))} per person)`,
     `Goal: ${usd(g)} for ${S.team.people} lifters (${usd(perLifter(), 2)} each).`,
-    `Signed-up events:`, ...planJobs().map(j => `  • ${j.on ? dayLabel(j.on) + ", " + timeOf(j) : "Any day"}: ${j.title} (${usd(j.group ? j.payout : earn(j) * num(S.team.people))})`),
+    `Signed-up events:`, ...planJobs().map(j => `  • ${j.on ? dayLabel(j.on) + ", " + timeOf(j) : "Any day"}: ${j.title} (${j.group && !num(j.payout) ? "payout not confirmed" : usd(j.group ? j.payout : earn(j) * num(S.team.people))})`),
     `The team raises ${usd(plannedTotal())} against a ${usd(g)} goal.`].join("\n");
 }
 $("#copyBtn").onclick = async () => {

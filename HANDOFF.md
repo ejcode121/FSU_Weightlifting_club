@@ -110,3 +110,8 @@ Checked on airbnb.com via Claude in Chrome on Oct 11 2026: Richmond, Apr 13–16
 - Plan tab: "Mark signed up" on an event counts its team payout toward the goal. No per-month counts, targets or charts.
 - Verified Oct 11 2026: FSU home games Oct 31 (Clemson), Nov 21 (NC State), Nov 27 (Florida, 3:30 PM); Visit Tallahassee sign-ups for SWAC Oct 26, NCAA South Region Nov 13, AAU Nationals Dec 5 (shift lists need a free account); FHSAA finals Nov 20; Turkey Trot Nov 22 festival + Nov 26 race; Winter Festival/Jingle Bell Run Dec 5; Market Days Dec 5–6; Marathon Feb 7 (all-volunteer) with expo Feb 6.
 - Unconfirmed: kickoff times Oct 31 and Nov 21, race times for cross-country days, expo day (site says "Saturday Feb 7"), all payouts (estimates).
+
+## No estimates (v5)
+- Removed every estimated payout, crew size, hourly rate and generic "any day" gig. Events keep only values read from organizer pages (date, time slot, venue, requirements, sign-up route). Pay shows "None listed" until the team types a confirmed payout and crew size on the event card; only confirmed payouts count toward the goal.
+- Dropped Market Days (no organizer program found) and the marathon expo entry (race site says "Saturday Feb 7", a Sunday; noted on the race-day card instead).
+- Instawork shifts (exact pay/date/time) are meant to be read from the user's iPhone Mirroring app via computer use; not done yet.

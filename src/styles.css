@@ -432,3 +432,9 @@ dl.ev{display:grid;gap:8px;margin:0}
 dl.ev>div{display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px;font-size:.92rem}
 dl.ev dt{color:var(--ink-3);font-weight:560}
 dl.ev dd{margin:0;color:var(--ink)}
+
+.pay-in{flex-wrap:wrap;align-items:flex-end}
+.pay-in label{display:grid;gap:4px;font-size:.78rem;color:var(--ink-3);font-weight:560}
+.pay-in input{width:9.5em;min-height:40px;border:1px solid var(--line-2);border-radius:10px;padding:6px 10px;background:var(--surface);color:var(--ink);font:inherit}
+.pay-in label:nth-of-type(2) input{width:5em}
+.pay-in .btn{margin-left:auto}

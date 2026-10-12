@@ -49,7 +49,10 @@ function renderLiveJobs() {
     ["Seminoles schedule", "https://seminoles.com/calendar/"],
     ["Visit Tallahassee events", "https://www.visittallahassee.com/events/"],
     ["Craigslist gigs, newest", "https://tallahassee.craigslist.org/search/ggg?sort=date"],
-    ["Handshake jobs", "https://fsu.joinhandshake.com/stu/postings"]
+    ["Handshake jobs", "https://fsu.joinhandshake.com/stu/postings"],
+    ["Instawork Tallahassee", "https://www.instawork.com/category/tallahassee-city"],
+    ["Volunteer Leon", "https://leoncountyfl.galaxydigital.com"],
+    ["Visit Tallahassee volunteering", "https://visittallahassee.volunteerlocal.com"]
   ];
   const pk = picks.map(j => { const s = q(j.query);
     return `<div class="live-pick"><b>${esc(j.title)}</b><span class="live-pick-links">
@@ -57,7 +60,7 @@ function renderLiveJobs() {
       <a href="https://fsu.joinhandshake.com/stu/postings?query=${s}" target="_blank" rel="noopener">Handshake</a>
       <a href="https://tallahassee.craigslist.org/search/ggg?query=${s}&sort=date" target="_blank" rel="noopener">Craigslist</a></span></div>`; }).join("");
   el.innerHTML = `<div class="sec-head"><h2 class="sec-title">Live this week</h2><span class="stamp">${stamp()}</span></div>
-    <h3 class="live-h">Today's searches</h3><div class="live-picks">${pk}</div>
+    ${pk ? `<h3 class="live-h">Today's searches</h3><div class="live-picks">${pk}</div>` : ""}
     <h3 class="live-h">Sources</h3><div class="live-grid">${src.map(([l, u]) => liveLink(l, u)).join("")}</div>`;
 }
 function renderLive() { renderLiveTrip(); renderLiveJobs(); }

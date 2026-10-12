@@ -213,21 +213,22 @@ const CAL = { y: 2026, m: 9, sel: "" };
 const dated = () => S.jobs.filter(j => j.on);
 const undated = () => S.jobs.filter(j => !j.on);
 const timeOf = j => j.time || "Time to be confirmed";
-function fmtTop(j) { return j.group ? `${usd(j.payout)} ÷ ${j.crew}` : `${usd(j.rate)}/hr × ${j.hours}h${j.tips ? ` + ${usd(j.tips)} tips` : ""}`; }
-function eventCard(j, withDate) {
-  const e = earn(j), on = !!S.plan[j.id];
+const payText = j => j.group ? (num(j.payout) ? `${usd(j.payout)} confirmed${num(j.crew) ? `, ${usd(j.payout / j.crew, 2)} each for ${j.crew} people` : ""}` : (j.pay || "None listed"))
+  : `${usd(j.rate)}/hr × ${j.hours}h${j.tips ? ` + ${usd(j.tips)} tips` : ""}`;
+function eventCard(j) {
+  const on = !!S.plan[j.id];
   return `<article class="job ${on ? "inplan" : ""}" data-id="${j.id}">
     <div class="job-top"><span class="cat-ico">${ico(CAT_ICO[j.cat] || "plan")}</span>
-      <div><h3>${esc(j.title)}</h3><div class="cn">${esc(j.cat)}</div></div>
-      <div class="job-pay"><b>${usd(e)}</b><small>${j.group ? "each, est." : "per shift"}</small></div></div>
+      <div><h3>${esc(j.title)}</h3><div class="cn">${esc(j.cat)}</div></div></div>
     <dl class="ev">
       ${j.on ? `<div><dt>Date</dt><dd>${esc(dayLabel(j.on))}</dd></div><div><dt>Time slot</dt><dd>${esc(timeOf(j))}</dd></div>` : ""}
-      ${j.group ? `<div><dt>Crew</dt><dd>${j.crew} people · ${usd(j.payout)} team total (est.)</dd></div>` : `<div><dt>Pay</dt><dd>${esc(fmtTop(j))}</dd></div>`}
-      ${j.how ? `<div><dt>How to sign up</dt><dd>${esc(j.how)}</dd></div>` : ""}
+      <div><dt>Pay</dt><dd class="pay-dd">${esc(payText(j))}</dd></div>
+      ${j.how ? `<div><dt>Sign-up</dt><dd>${esc(j.how)}</dd></div>` : ""}
     </dl>
     ${j.desc ? `<p class="desc">${esc(j.desc)}</p>` : ""}
-    <div class="links">${j.url ? `<a href="${esc(j.url)}" target="_blank" rel="noopener">Sign-up page</a>` : ""}${searchLinks(j)}<button type="button" class="btn ghost sm" data-edit style="min-height:32px;padding:2px 0">${ico("edit")}Edit</button></div>
-    ${j.group ? `<div class="job-foot"><span class="need"><span>${on ? "Counted toward your goal" : "Not counted yet"}</span></span>
+    <div class="links">${j.url ? `<a href="${esc(j.url)}" target="_blank" rel="noopener">Event page</a>` : ""}${searchLinks(j)}<button type="button" class="btn ghost sm" data-edit style="min-height:32px;padding:2px 0">${ico("edit")}Edit</button></div>
+    ${j.group ? `<div class="job-foot pay-in"><label>Confirmed payout ($)<input type="number" min="0" step="any" inputmode="decimal" data-pay="payout" value="${num(j.payout) || ""}" placeholder="Enter once quoted"></label>
+      <label>Crew<input type="number" min="0" step="1" inputmode="numeric" data-pay="crew" value="${num(j.crew) || ""}"></label>
       <button type="button" class="btn ${on ? "" : "pri"} sm" data-signed aria-pressed="${on}">${ico(on ? "check" : "plus")}${on ? "Signed up" : "Mark signed up"}</button></div>` : ""}
   </article>`;
 }
@@ -261,7 +262,8 @@ function renderDayPanel() {
 }
 function renderJobs() {
   const list = undated().sort((a, b) => (b.group - a.group) || a.title.localeCompare(b.title));
-  $("#resCount").textContent = `${dated().length} dated opportunities · ${list.length} you can do any day`;
+  $("#resCount").textContent = `${list.length} without a date`;
+  $("#anyDay").hidden = !list.length;
   $("#jobList").innerHTML = list.map(j => eventCard(j)).join("");
   renderCalendar(); renderDayPanel();
 }
@@ -274,7 +276,7 @@ function renderPlanList() {
   $("#planList").innerHTML = pj.length ? pj.map(j => `
     <div class="shift-row" data-id="${j.id}">
       <div><b>${esc(j.title)}</b><small>${j.on ? `${esc(dayLabel(j.on))} · ${esc(timeOf(j))}` : "Any day"}</small></div>
-      <div class="sub">${usd(j.group ? j.payout : earn(j) * num(S.team.people))}</div>
+      <div class="sub">${j.group && !num(j.payout) ? "No payout yet" : usd(j.group ? j.payout : earn(j) * num(S.team.people))}</div>
       <div style="grid-column:1/-1"><button type="button" class="btn sm" data-unplan>${ico("x")}Remove</button></div>
     </div>`).join("")
     : `<div class="empty"><b>Nothing signed up</b><button class="btn pri" type="button" data-act="goto-jobs">${ico("search")}Open the work calendar</button></div>`;
@@ -283,7 +285,7 @@ function renderResult() {
   const g = goal(), raised = plannedTotal(), gap = raised - g;
   const cls = raised === 0 ? "" : gap >= 0 ? "ok" : "bad";
   $("#result").innerHTML = `<div class="verdict ${cls}"><b>${raised === 0 ? "Nothing signed up" : gap >= 0 ? `Covered, ${usd(gap)} to spare` : `${usd(-gap)} short`}</b>
-    ${raised === 0 ? "" : `${usd(raised)} from ${planJobs().length} signed-up ${planJobs().length > 1 ? "events" : "event"}`}</div>`;
+    ${raised === 0 ? "" : `${usd(raised)} confirmed from ${planJobs().length} signed-up ${planJobs().length > 1 ? "events" : "event"}`}</div>`;
 }
 function renderPlan() { renderPlanList(); renderResult(); }
 
@@ -395,6 +397,13 @@ function jobClicks(e) {
   if (signHandler(e)) return;
   const ed = e.target.closest("[data-edit]"); if (ed) { e.preventDefault(); openJob(ed.closest("[data-id]").dataset.id); }
 }
+function payInput(e) {
+  const i = e.target.closest("[data-pay]"); if (!i) return;
+  const j = S.jobs.find(x => x.id === i.closest("[data-id]").dataset.id); if (!j) return;
+  j[i.dataset.pay] = num(i.value); save(); renderHeroes(); renderSetupFacts(); renderPlan();
+  const dd = i.closest("[data-id]").querySelector(".pay-dd"); if (dd) dd.textContent = payText(j);
+}
+$("#jobList").addEventListener("input", payInput); $("#dayPanel").addEventListener("input", payInput);
 $("#jobList").addEventListener("click", jobClicks);
 $("#dayPanel").addEventListener("click", jobClicks);
 $("#planList").addEventListener("click", signHandler);
@@ -402,7 +411,7 @@ $("#addJob").onclick = () => openJob(null);
 
 // job dialog
 function openJob(id) {
-  const j = id ? S.jobs.find(x => x.id === id) : { title: "", cat: CATS[0], rate: 15, hours: 4, tips: 0, group: true, payout: 0, crew: 5, on: CAL.sel || "", time: "", url: "", area: "city", when: [], months: null, how: "", query: "", desc: "" };
+  const j = id ? S.jobs.find(x => x.id === id) : { title: "", cat: CATS[0], rate: 15, hours: 4, tips: 0, group: true, payout: 0, crew: 0, pay: "", on: CAL.sel || "", time: "", url: "", area: "city", when: [], months: null, how: "", query: "", desc: "" };
   const f = $("#jobForm");
   f.innerHTML = `
     <h2>${id ? "Edit opportunity" : "Add an opportunity"}</h2>
@@ -412,8 +421,8 @@ function openJob(id) {
       <label class="field">Date (blank means any day)<input type="date" name="on" value="${esc(j.on)}"></label>
       <label class="field" style="grid-column:1/-1">Time slot<input type="text" name="time" placeholder="e.g. 8:00 AM–12:00 PM" value="${esc(j.time)}"></label>
       <label class="switch-row" style="grid-column:1/-1"><input type="checkbox" class="switch" name="group" ${j.group ? "checked" : ""}><span>Team effort<small>One payout split among a crew</small></span></label>
-      <label class="field">Team payout ($)<input type="number" step="any" min="0" name="payout" value="${j.payout}"></label>
-      <label class="field">Crew size<input type="number" min="1" name="crew" value="${j.crew}"></label>
+      <label class="field">Confirmed team payout ($)<input type="number" step="any" min="0" name="payout" value="${j.payout || ""}"></label>
+      <label class="field">Crew size<input type="number" min="0" name="crew" value="${j.crew || ""}"></label>
       <label class="field">Hourly rate ($)<input type="number" step="any" min="0" name="rate" value="${j.rate}"></label>
       <label class="field">Hours<input type="number" step="any" min="0.5" name="hours" value="${j.hours || 1}"></label>
       <label class="field">Tips ($)<input type="number" step="any" min="0" name="tips" value="${j.tips}"></label>
@@ -434,7 +443,7 @@ function openJob(id) {
     if (ev.submitter?.value !== "ok") return;
     const d = new FormData(f);
     const out = { title: d.get("title").trim(), cat: d.get("cat"), group: d.has("group"), on: d.get("on") || "", time: d.get("time").trim(), url: d.get("url").trim(),
-      rate: num(d.get("rate")), hours: Math.max(.5, num(d.get("hours"))), tips: num(d.get("tips")), payout: num(d.get("payout")), crew: Math.max(1, num(d.get("crew"))),
+      rate: num(d.get("rate")), hours: Math.max(.5, num(d.get("hours"))), tips: num(d.get("tips")), payout: num(d.get("payout")), crew: Math.max(0, num(d.get("crew"))),
       desc: d.get("desc"), how: d.get("how"), query: d.get("query").trim() };
     if (id) Object.assign(S.jobs.find(x => x.id === id), out); else S.jobs.push({ id: uid(), area: "city", when: [], months: null, ...out });
     save(); if (out.on) selectDay(out.on); refreshLight(); toast(id ? "Saved." : "Added.");
@@ -448,7 +457,7 @@ function summaryText() {
   return [`FSU Weightlifting: ${S.trip.dest || "trip"} fundraising plan`,
     `Trip: ${selL()?.name || "none"} + ${selT()?.name || "none"}, ${selN()} nights${selRed() ? " (red-eye home)" : ""} = ${usd(tripTotal())} (${usd(tripTotal() / Math.max(1, num(S.team.people)))} per person)`,
     `Goal: ${usd(g)} for ${S.team.people} lifters (${usd(perLifter(), 2)} each).`,
-    `Signed-up events:`, ...planJobs().map(j => `  • ${j.on ? dayLabel(j.on) + ", " + timeOf(j) : "Any day"}: ${j.title} (${usd(j.group ? j.payout : earn(j) * num(S.team.people))})`),
+    `Signed-up events:`, ...planJobs().map(j => `  • ${j.on ? dayLabel(j.on) + ", " + timeOf(j) : "Any day"}: ${j.title} (${j.group && !num(j.payout) ? "payout not confirmed" : usd(j.group ? j.payout : earn(j) * num(S.team.people))})`),
     `The team raises ${usd(plannedTotal())} against a ${usd(g)} goal.`].join("\n");
 }
 $("#copyBtn").onclick = async () => {
